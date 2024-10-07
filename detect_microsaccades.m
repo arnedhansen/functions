@@ -1,9 +1,11 @@
 %% Function to detect microsaccades and calculate microsaccade rate
 % Based on Engbert & Kliegl, 2003
 
-function microsaccade_rate = detect_microsaccades(fsample, velthres, mindur, velData, trlLength)
+function microsaccade_rate = detect_microsaccades(fsample, velData, trlLength)
 % Convolution kernel as per Engbert et al., 2003
 kernel = [1 1 0 -1 -1].*(fsample/6);
+velthres = 6; % Threshold as per Engbert et al. (2003): 6x median SD of velocity
+mindur = 6; % Minimum duration of microsaccades of 6 samples = 12ms at 500 Hz
 
 % Padding and convolution
 n = size(kernel, 2);
@@ -13,7 +15,7 @@ vel = convn(dat, kernel, 'same');
 vel = ft_preproc_padding(vel, 'remove', pad);
 
 % Compute velocity thresholds (Engbert et al. 2003, Eqn. 2)
-medianstd = sqrt(median(vel.^2, 2) - (median(vel, 2)).^2);
+medianstd = sqrt(median(vel.^2, 2, 'omitnan') - (median(vel, 2, 'omitnan')).^2);
 radius = velthres * medianstd;
 
 % Microsaccade detection based on threshold crossing
