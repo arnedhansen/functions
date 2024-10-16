@@ -45,5 +45,5 @@ for k = 1:size(sacidx, 2)
 end
 
 % Compute microsaccade rate (microsaccades per second)
-microsaccade_rate = length(microsaccades) / (trlLength / fsample);
+microsaccade_rate = length(microsaccades) / ((trlLength-1) / fsample);
 end
