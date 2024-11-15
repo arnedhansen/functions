@@ -1,6 +1,6 @@
 %% Function to set up data processing for any project
 
-function setup(projectName)
+function [subjects, path] = setup(projectName)
     % Clear environment
     clearvars -except projectName;
     eeglab;
