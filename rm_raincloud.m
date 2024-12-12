@@ -1,4 +1,4 @@
-function h = rm_raincloud(data, colours, plot_top_to_bottom, raindrop_size, plot_mean_dots, connecting_lines)
+function h = rm_raincloud(data, colours, add_boxplot, plot_top_to_bottom, raindrop_size, plot_mean_dots, connecting_lines)
 %% Check dimensions of data (should be M x 2 where M is the number of groupects, 2 for low and high contrast)
 [n_groups, n_conditions] = size(data);
 n_subjects = max(size(data{1}));
@@ -70,7 +70,7 @@ for conds = 1:n_conditions
     for group = 1:n_groups
         % Calculate jittered y-positions with offsets
         if conds == 2
-            jit_y{group, conds} = -jit{group, conds} + ks_offsets(conds-1) - 1;
+            jit_y{group, conds} = -jit{group, conds} + ks_offsets(conds) + spacing*0.375;
         else
             jit_y{group, conds} = -jit{group, conds} + ks_offsets(conds);
         end
@@ -124,6 +124,7 @@ end
 %% Clear up axis labels
 set(gca, 'YTick', fliplr(ks_offsets));
 set(gca, 'YTickLabel', n_groups:-1:1);
+set(gca, 'YTick', [0, ks_offsets(1)], 'YTickLabel', {'High Contrast', 'Low Contrast'}, 'FontSize', 20);
 
 %% Rotate plots if needed
 if ~plot_top_to_bottom
