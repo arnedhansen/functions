@@ -1,18 +1,12 @@
 function h = rm_raincloud(data, colours, add_boxplot, plot_top_to_bottom, raindrop_size, plot_mean_dots, connecting_lines)
-%% Check dimensions of data (should be M x 2 where M is the number of groupects, 2 for low and high contrast)
+%% Check dimensions of data (should be M x 2 where M is the number of groups, 2 for low and high contrast)
 [n_groups, n_conditions] = size(data);
 n_subjects = max(size(data{1}));
 
-% Make sure we have the correct number of colours
-assert(all(size(colours) == [n_conditions 3]), 'Number of colors does not match number of conditions');
-
-%% Default arguments
-if nargin < 3
-    plot_top_to_bottom  = 0;    % Left-to-right plotting by default
-end
+%% Check correct number of colours
+assert(all(size(colours) == [n_conditions 3]), 'Number of colours does not match number of conditions');
 
 %% Calculate properties of density plots
-
 % Granularity for density estimation
 density_granularity = 200;
 n_bins = repmat(density_granularity, n_groups, n_conditions);
@@ -83,11 +77,25 @@ for conds = 1:n_conditions
         h.s{group, conds} = scatter(data{group, conds}, jit_y{group, conds}, ...
             'MarkerFaceColor', colours(conds, :), 'MarkerEdgeColor', 'none', ...
             'MarkerFaceAlpha', 0.5, 'SizeData', raindrop_size);
+
+        % Add boxplots
+        if add_boxplot
+            % Calculate positions for the boxplot to align with the jittered y-values
+            boxplot_position = ks_offsets(conds);  % Align with the offset for the density plot
+
+            % Define box_data (the data to plot in the boxplot)
+            box_data = data{group, conds};  % This is the data for the current group and condition
+
+            % Create the boxplot with the correct orientation
+            h.b{group, conds} = boxchart(repmat(boxplot_position, length(box_data), 1), box_data, ...
+                'Orientation', 'horizontal', 'BoxFaceColor', colours(conds, :), ...
+                'LineWidth', 1.5, 'MarkerStyle', 'none', 'BoxFaceAlpha', 0.5);
+        end
     end
 end
 
 % Plot grey lines connecting data from condition 1 to condition 2 for each participant
-if connecting_lines == 1
+if connecting_lines
     for group = 1:n_groups
         for subj = 1:n_subjects
             % Only draw a line if both conditions have data for this participant
@@ -109,7 +117,7 @@ if connecting_lines == 1
 end
 
 % Plot mean dots
-if plot_mean_dots == 1
+if plot_mean_dots
     for conds = 1:n_conditions
         for group = 1:n_groups
             if conds == 2 % Mirror the mean dots for the second condition by negating the y-values
