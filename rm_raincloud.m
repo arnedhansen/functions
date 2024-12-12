@@ -1,13 +1,11 @@
-function h = rm_raincloud(data, colours, plot_top_to_bottom, raindrop_size)
-%% check dimensions of data
-
-% Check dimensions of data (should be M x 2 where M is the number of subjects, 2 for low and high contrast)
+function h = rm_raincloud(data, colours, plot_top_to_bottom, raindrop_size, plot_mean_dots)
+%% Check dimensions of data (should be M x 2 where M is the number of subjects, 2 for low and high contrast)
 [n_subjects, n_conditions] = size(data);
 
 % Make sure we have the correct number of colours
 assert(all(size(colours) == [n_conditions 3]), 'Number of colors does not match number of conditions');
 
-%% default arguments
+%% Default arguments
 if nargin < 3
     plot_top_to_bottom  = 0;    % Left-to-right plotting by default
 end
@@ -19,15 +17,15 @@ density_granularity = 200;
 n_bins = repmat(density_granularity, n_subjects, n_conditions);
 
 % Calculate kernel densities
-for j = 1:n_conditions
-    for i = 1:n_subjects
+for conds = 1:n_conditions
+    for subj = 1:n_subjects
         % Compute density using 'ksdensity'
         bandwidth           = [];
-        [ks{i, j}, x{i, j}] = ksdensity(data{i, j}, 'NumPoints', n_bins(i, j), 'bandwidth', bandwidth);
+        [ks{subj, conds}, x{subj, conds}] = ksdensity(data{subj, conds}, 'NumPoints', n_bins(subj, conds), 'bandwidth', bandwidth);
 
         % Define the faces to connect each adjacent f(x) and the corresponding points at y = 0.
-        q{i, j} = (1:n_bins(i, j) - 1)';
-        faces{i, j} = [q{i, j}, q{i, j} + 1, q{i, j} + n_bins(i, j) + 1, q{i, j} + n_bins(i, j)];
+        q{subj, conds} = (1:n_bins(subj, conds) - 1)';
+        faces{subj, conds} = [q{subj, conds}, q{subj, conds} + 1, q{subj, conds} + n_bins(subj, conds) + 1, q{subj, conds} + n_bins(subj, conds)];
     end
 end
 
@@ -39,18 +37,22 @@ ks_offsets = [0:n_conditions-1] .* spacing;
 ks_offsets = fliplr(ks_offsets);
 
 % Calculate patch vertices from kernel density
-for j = 1:n_conditions
-    for i = 1:n_subjects
-        verts{i, j} = [x{i, j}', ks{i, j}' + ks_offsets(j); x{i, j}', ones(n_bins(i, j), 1) * ks_offsets(j)];
+for conds = 1:n_conditions
+    for subj = 1:n_subjects
+        if conds == 2 % Mirror the second condition by negating the ks_offsets
+            verts{subj, conds} = [x{subj, conds}', -ks{subj, conds}' + ks_offsets(conds); x{subj, conds}', ones(n_bins(subj, conds), 1) * -ks_offsets(conds)];
+        else
+            verts{subj, conds} = [x{subj, conds}', ks{subj, conds}' + ks_offsets(conds); x{subj, conds}', ones(n_bins(subj, conds), 1) * ks_offsets(conds)];
+        end
     end
 end
 
 % Jitter for the raindrops
 jit_width = spacing / 8;
 
-for j = 1:n_conditions
-    for i = 1:n_subjects
-        jit{i,j} = jit_width + rand(1, length(data{i,j})) * jit_width;
+for conds = 1:n_conditions
+    for subj = 1:n_subjects
+        jit{subj,conds} = jit_width + rand(1, length(data{subj,conds})) * jit_width;
     end
 end
 
@@ -61,26 +63,38 @@ cell_means = cellfun(@mean, data);
 hold on
 
 % Patches
-for j = 1:n_conditions
-    for i = 1:n_subjects
-        h.p{i, j} = patch('Faces', faces{i, j}, 'Vertices', verts{i, j}, 'FaceVertexCData', colours(j, :), 'FaceColor', 'flat', 'EdgeColor', 'none', 'FaceAlpha', 0.5);
-        h.s{i, j} = scatter(data{i, j}, -jit{i, j} + ks_offsets(j), 'MarkerFaceColor', colours(j, :), 'MarkerEdgeColor', 'none', 'MarkerFaceAlpha', 0.5, 'SizeData', raindrop_size);
+for conds = 1:n_conditions
+    for subj = 1:n_subjects
+        h.p{subj, conds} = patch('Faces', faces{subj, conds}, 'Vertices', verts{subj, conds}, 'FaceVertexCData', colours(conds, :), 'FaceColor', 'flat', 'EdgeColor', 'none', 'FaceAlpha', 0.5);
+        
+        % Modify scatter points to mirror condition 2
+        if conds == 2 % Mirror the scatter points of the second condition by negating the y-values
+            h.s{subj, conds} = scatter(data{subj, conds}, -jit{subj, conds} - ks_offsets(conds), 'MarkerFaceColor', colours(conds, :), 'MarkerEdgeColor', 'none', 'MarkerFaceAlpha', 0.5, 'SizeData', raindrop_size);
+        else
+            h.s{subj, conds} = scatter(data{subj, conds}, -jit{subj, conds} + ks_offsets(conds), 'MarkerFaceColor', colours(conds, :), 'MarkerEdgeColor', 'none', 'MarkerFaceAlpha', 0.5, 'SizeData', raindrop_size);
+        end
     end
 end
 
 % Plot mean lines
-for j = 1:n_conditions
-    for i = 1:n_subjects - 1
-        h.l(i, j) = line(cell_means([i, i+1], j), ks_offsets([i, i+1]), 'LineWidth', 4, 'Color', colours(j, :));
+for conds = 1:n_conditions
+    for subj = 1:n_subjects - 1
+        h.l(subj, conds) = line(cell_means([subj, subj+1], conds), ks_offsets([subj, subj+1]), 'LineWidth', 4, 'Color', colours(conds, :));
     end
 end
 
 % Plot mean dots
-% for j = 1:n_conditions
-%     for i = 1:n_subjects
-%         h.m(i, j) = scatter(cell_means(i, j), ks_offsets(j), 'MarkerFaceColor', colours(j, :), 'MarkerEdgeColor', [0 0 0], 'MarkerFaceAlpha', 1, 'SizeData', raindrop_size * 2, 'LineWidth', 2);
-%     end
-% end
+if plot_mean_dots == 1
+    for conds = 1:n_conditions
+        for subj = 1:n_subjects
+            if conds == 2 % Mirror the mean dots for the second condition by negating the y-values
+                h.m(subj, conds) = scatter(cell_means(subj, conds), -ks_offsets(conds), 'MarkerFaceColor', colours(conds, :), 'MarkerEdgeColor', [0 0 0], 'MarkerFaceAlpha', 1, 'SizeData', raindrop_size * 1.5, 'LineWidth', 2);
+            else
+                h.m(subj, conds) = scatter(cell_means(subj, conds), ks_offsets(conds), 'MarkerFaceColor', colours(conds, :), 'MarkerEdgeColor', [0 0 0], 'MarkerFaceAlpha', 1, 'SizeData', raindrop_size * 1.5, 'LineWidth', 2);
+            end
+        end
+    end
+end
 
 %% Clear up axis labels
 set(gca, 'YTick', fliplr(ks_offsets));
@@ -91,4 +105,5 @@ if ~plot_top_to_bottom
     view([90 -90]);
     axis ij
 end
+
 end
