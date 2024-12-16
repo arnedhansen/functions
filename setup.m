@@ -1,11 +1,14 @@
 %% Function to set up data processing for any project
 
-function [subjects, path] = setup(projectName)
+function [subjects, path, colors] = setup(projectName)
     % Clear environment
     clearvars -except projectName;
     eeglab;
     clc;
     close all;
+
+    % Load colors
+    colors = color_def(projectName);
 
     % Set the base path according to the provided project name
     baseDir = '/Volumes/methlab/Students/Arne/';
