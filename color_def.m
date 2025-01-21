@@ -1,17 +1,38 @@
 % Script to define colors for plotting
 
 function colors = color_def(projectName)
-    if strcmp(projectName, 'AOC')
-        colors = [1 0.416 0.553; 0.902 0.855 0.788]; 
-    elseif strcmp(projectName, 'GCP')
-        colors = [0.902 0.855 0.788; 0.557 0.416 0.553]; % Beige and purple
-        % A very light, muted tone that resembles "Linen", "Beige", or "Champagne".
-        % A darker, muted purple tone. It could be described as "Dusty Plum", "Taupe Purple", or "Heather".
-    end
+if strcmp(projectName, 'AOC')
+    colors = [1 0.416 0.553; 0.902 0.855 0.788];
+elseif strcmp(projectName, 'GCP')
+    colors = [
+        0.937, 0.804, 0.867; % Pale rose
+        0.902 0.855 0.788; % Beige
+        0.957 0.714 0.514; % Pastel peach
+        0.557 0.416 0.553; % Purple
+        ];
+end
 end
 
-% UZH colors?
-
+% %% UZH colors?
+%
+%
+% %% Pastel colors
+% colors = [
+%     0.902 0.855 0.788; % Beige
+%     0.557 0.416 0.553; % Purple
+%     0.957 0.714 0.514; % Pastel peach
+%     0.678, 0.847, 0.902; % Soft blue
+%     0.667, 0.882, 0.722; % Mint green
+%     0.996, 0.890, 0.561; % Pastel yellow
+%     0.941, 0.678, 0.678; % Light coral
+%     0.753, 0.706, 0.878; % Lavender
+%     0.988, 0.733, 0.831; % Blush pink
+%     0.992, 0.859, 0.780; % Light apricot
+%     0.816, 0.867, 0.710; % Pastel sage
+%     0.749, 0.827, 0.933; % Baby blue
+%     0.937, 0.804, 0.867; % Pale rose
+% ];
+%
 %% Visualization
 % rgbMatrix = colors;
 % 
