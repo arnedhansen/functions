@@ -3,6 +3,7 @@
 function [subjects, path, colors] = setup(projectName)
     % Clear environment
     clearvars -except projectName;
+    addpath('/Users/Arne/Documents/matlabtools/eeglab2024.2');
     eeglab;
     clc;
     close all;

@@ -2,7 +2,9 @@
 
 function colors = color_def(projectName)
 if strcmp(projectName, 'AOC')
-    colors = [1 0.416 0.553; 0.902 0.855 0.788];
+    colors = [0.68, 0.85, 0.90;
+              0.60, 0.80, 0.60;
+              1.00, 0.70, 0.75];
 elseif strcmp(projectName, 'GCP')
     colors = [
         0.937, 0.804, 0.867; % Pale rose
