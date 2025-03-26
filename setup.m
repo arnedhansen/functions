@@ -20,7 +20,7 @@ end
 % Set the base path according to the provided project name
 if ispc == 1
     baseDir = 'W:\Students\Arne\';
-    path = strcat(baseDir, projectName, 'data\features\');
+    path = strcat(baseDir, projectName, '\data\features\');
 else
     baseDir = '/Volumes/methlab/Students/Arne/';
     path = fullfile(baseDir, projectName, 'data/features/');
