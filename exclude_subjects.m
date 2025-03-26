@@ -2,7 +2,11 @@
 function filteredSubjects = exclude_subjects(subjects, project)
 if strcmp(project, 'AOC')
     % Open and read the RTF file
-    fileID = fopen('/Volumes/methlab/Students/Arne/AOC/data/controls/AOC_exclusion_participants.rtf', 'r');
+    if ispc == 1
+        fileID = fopen('W:\Students\Arne\AOC\data\controls\AOC_exclusion_participants.rtf', 'r');
+    else
+        fileID = fopen('/Volumes/methlab/Students/Arne/AOC/data/controls/AOC_exclusion_participants.rtf', 'r');
+    end
 
     % Read the content as a raw string
     rawText = fread(fileID, '*char')';
