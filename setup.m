@@ -1,6 +1,6 @@
 %% Function to set up data processing for any project
 
-function [subjects, path, colors] = setup(projectName)
+function [subjects, path, colors, headmodel] = setup(projectName)
 % Clear environment
 clearvars -except projectName;
 
@@ -9,6 +9,13 @@ addEEGLab
 
 % Load colors
 colors = color_def(projectName);
+
+% Load headmodel
+if ispc == 1
+    headmodel = load('W:\Students\Arne\MA\headmodel\ant128lay.mat');
+else
+    headmodel = load('/Volumes/methlab/Students/Arne/MA/headmodel/ant128lay.mat');
+end
 
 % Set the base path according to the provided project name
 if ispc == 1
@@ -31,5 +38,5 @@ subjects = {folders.name};
 
 % Display the loaded subjects
 disp('Loaded subjects:');
-disp(subjects);
+disp(subjects(:));
 end
