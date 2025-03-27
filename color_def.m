@@ -1,10 +1,15 @@
-% Script to define colors for plotting
+% Script to define colors for plotting depending on project name
 
 function colors = color_def(projectName)
 if strcmp(projectName, 'AOC')
-    colors = [0.68, 0.85, 0.90;
-              0.60, 0.80, 0.60;
-              1.00, 0.70, 0.75];
+    % "Normal" AOC pastel colors
+    colors = [0.68, 0.85, 0.90;  % Pastel blue
+        0.60, 0.80, 0.60;  % Pastel green
+        1.00, 0.70, 0.75]; % Pastel red
+    % DataViz pastel colors
+    % colors = [1.000, 0.549, 0.000;  % Pastel orange
+    %           0.627, 0.204, 0.941;  % Pastel magenta
+    %           0.082, 0.565, 0.565]; % Pastel green
 elseif strcmp(projectName, 'GCP')
     colors = [
         0.937, 0.804, 0.867; % Pale rose
@@ -37,17 +42,17 @@ end
 %
 %% Visualization
 % rgbMatrix = colors;
-% 
+%
 % % Create a figure to display colours
 % figure;
-% 
+%
 % % Loop through each row in the RGB matrix
 % for i = 1:size(rgbMatrix, 1)
 %     % Plot each colour as a rectangle
 %     rectangle('Position', [i-1, 0, 1, 1], 'FaceColor', rgbMatrix(i, :), 'EdgeColor', 'none');
 %     hold on;
 % end
-% 
+%
 % % Adjust axis to fit all rectangles
 % axis equal;
 % axis off;
