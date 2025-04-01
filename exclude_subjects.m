@@ -27,5 +27,5 @@ if strcmp(project, 'AOC')
 
     % Display the updated subjects list
     disp('Filtered Subjects:');
-    disp(filteredSubjects);
+    disp(filteredSubjects');
 end
