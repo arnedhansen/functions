@@ -1,4 +1,4 @@
-function [trialsToKeep, excludedTrialIdx] = fixCheck(dataET, window, fixThresh, distOK)
+function [trialsToKeep, excludedTrialIdx, distL, invalidTrials] = fixCheck(dataET, window, fixThresh, distOK)
 % fixCheck checks if participants were fixating the centre during pre-stimulus period
 %
 % Inputs:
@@ -9,13 +9,17 @@ function [trialsToKeep, excludedTrialIdx] = fixCheck(dataET, window, fixThresh, 
 %
 % Outputs:
 %   - trialsToKeep: logical index vector for good trials
-%   - excludedTrialIdx: indices of trials excluded
+%   - excludedTrialIdx: indices of trials excluded due to poor fixation (with valid gaze)
+%   - distL: cell array of distance vectors per trial (valid samples only)
+%   - invalidTrials: indices of trials with no valid gaze data (e.g. outside screen)
 
     screenCentreX = 400;  % half of screen width (800)
     screenCentreY = 300;  % half of screen height (600)
 
     nTrials = numel(dataET.trial);
     trialsToKeep = true(nTrials, 1);  % Initialise all to true
+    invalidTrials = [];              % Trials with no valid samples
+    distL = cell(nTrials, 1);         % Store distances from centre
 
     for t = 1:nTrials
         timeVec = dataET.time{t};
@@ -23,6 +27,7 @@ function [trialsToKeep, excludedTrialIdx] = fixCheck(dataET, window, fixThresh, 
 
         if isempty(idx)
             trialsToKeep(t) = false;
+            invalidTrials(end+1) = t;
             continue;
         end
 
@@ -30,17 +35,27 @@ function [trialsToKeep, excludedTrialIdx] = fixCheck(dataET, window, fixThresh, 
         xL = dataET.trial{t}(strcmp(dataET.label, 'L-GAZE-X'), idx);
         yL = dataET.trial{t}(strcmp(dataET.label, 'L-GAZE-Y'), idx);
 
-        % Compute Euclidean distances from screen centre (400, 300)
-        distL = sqrt((xL - screenCentreX).^2 + (yL - screenCentreY).^2);
+        % Screen bounds check
+        validIdx = xL >= 0 & xL <= 800 & yL >= 0 & yL <= 600;
+        xL = xL(validIdx);
+        yL = yL(validIdx);
 
-        % Check how many samples fall within allowed distance
-        okSamples = (distL <= distOK);
+        if isempty(xL)
+            trialsToKeep(t) = false;
+            invalidTrials(end+1) = t;
+            continue;
+        end
 
-        % Mark trial as invalid if not enough samples within threshold
+        % Compute Euclidean distance from screen centre
+        distL{t} = sqrt((xL - screenCentreX).^2 + (yL - screenCentreY).^2);
+
+        % Proportion of valid samples within allowed distance
+        okSamples = (distL{t} <= distOK);
         if mean(okSamples) < fixThresh
             trialsToKeep(t) = false;
         end
     end
 
-    excludedTrialIdx = find(~trialsToKeep);
+    % Indices of trials with valid data but poor fixation
+    excludedTrialIdx = find(~trialsToKeep & ~ismember(1:nTrials, invalidTrials));
 end
