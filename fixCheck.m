@@ -29,15 +29,12 @@ function [trialsToKeep, excludedTrialIdx] = fixCheck(dataET, window, fixThresh, 
         % Gaze positions
         xL = dataET.trial{t}(strcmp(dataET.label, 'L-GAZE-X'), idx);
         yL = dataET.trial{t}(strcmp(dataET.label, 'L-GAZE-Y'), idx);
-        xR = dataET.trial{t}(strcmp(dataET.label, 'R-GAZE-X'), idx);
-        yR = dataET.trial{t}(strcmp(dataET.label, 'R-GAZE-Y'), idx);
 
         % Compute Euclidean distances from screen centre (400, 300)
         distL = sqrt((xL - screenCentreX).^2 + (yL - screenCentreY).^2);
-        distR = sqrt((xR - screenCentreX).^2 + (yR - screenCentreY).^2);
 
         % Check how many samples fall within allowed distance
-        okSamples = (distL <= distOK) & (distR <= distOK);
+        okSamples = (distL <= distOK);
 
         % Mark trial as invalid if not enough samples within threshold
         if mean(okSamples) < fixThresh
