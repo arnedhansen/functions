@@ -5,20 +5,21 @@ function [trialsToKeep, excludedTrialIdx] = fixCheck(dataET, window, fixThresh, 
 %   - dataET: FieldTrip data structure with eye-tracking channels
 %   - window: [start, end] in seconds (e.g., [-0.5 0])
 %   - fixThresh: proportion of samples that must fall within allowed distance
-%   - distOK: maximum Euclidean distance from centre (in visual degrees or appropriate units)
+%   - distOK: maximum Euclidean distance from centre (in pixels, same unit as gaze)
 %
 % Outputs:
 %   - trialsToKeep: logical index vector for good trials
 %   - excludedTrialIdx: indices of trials excluded
+
+    screenCentreX = 400;  % half of screen width (800)
+    screenCentreY = 300;  % half of screen height (600)
 
     nTrials = numel(dataET.trial);
     trialsToKeep = true(nTrials, 1);  % Initialise all to true
 
     for t = 1:nTrials
         timeVec = dataET.time{t};
-        trialStart = window(1);
-        trialEnd = window(2);
-        idx = find(timeVec >= trialStart & timeVec <= trialEnd);
+        idx = find(timeVec >= window(1) & timeVec <= window(2));
 
         if isempty(idx)
             trialsToKeep(t) = false;
@@ -31,14 +32,14 @@ function [trialsToKeep, excludedTrialIdx] = fixCheck(dataET, window, fixThresh, 
         xR = dataET.trial{t}(strcmp(dataET.label, 'R-GAZE-X'), idx);
         yR = dataET.trial{t}(strcmp(dataET.label, 'R-GAZE-Y'), idx);
 
-        % Compute Euclidean distances from centre (0,0)
-        distL = sqrt(xL.^2 + yL.^2);
-        distR = sqrt(xR.^2 + yR.^2);
+        % Compute Euclidean distances from screen centre (400, 300)
+        distL = sqrt((xL - screenCentreX).^2 + (yL - screenCentreY).^2);
+        distR = sqrt((xR - screenCentreX).^2 + (yR - screenCentreY).^2);
 
-        % Check how many samples fall within distance
+        % Check how many samples fall within allowed distance
         okSamples = (distL <= distOK) & (distR <= distOK);
 
-        % Pass if enough samples are OK
+        % Mark trial as invalid if not enough samples within threshold
         if mean(okSamples) < fixThresh
             trialsToKeep(t) = false;
         end
