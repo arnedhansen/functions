@@ -56,6 +56,6 @@ function [trialsToKeep, excludedTrialIdx, distL, invalidTrials] = fixCheck(dataE
         end
     end
 
-    % Indices of trials with valid data but poor fixation
-    excludedTrialIdx = find(~trialsToKeep & ~ismember(1:nTrials, invalidTrials));
+    % Indices of trials to exclude: both poor fixation and invalid gaze
+    excludedTrialIdx = find(~trialsToKeep);
 end
