@@ -20,12 +20,12 @@ if strcmp(project, 'AOC')
     subjectsNumeric = str2double(subjects); % Convert cell array to numeric
 
     % Exclude subjects
-    filteredSubjects = setdiff(subjectsNumeric, exclusionSubjects);
+    filteredSubjectsList = setdiff(subjectsNumeric, exclusionSubjects);
 
     % Convert back to cell array of strings
-    filteredSubjects = cellstr(string(filteredSubjects));
+    filteredSubjects = cellstr(string(filteredSubjectsList));
 
     % Display the updated subjects list
     disp('Filtered Subjects:');
-    disp(filteredSubjects');
+    disp(filteredSubjectsList');
 end

@@ -62,6 +62,7 @@ folders = dirs([dirs.isdir] & ~ismember({dirs.name}, {'.', '..'}));
 subjects = {folders.name};
 
 % Display the loaded subjects
+filteredSubjects = str2double(string(subjects));
 disp('Loaded subjects:');
-disp(subjects(:));
+disp(filteredSubjects(:));
 end
