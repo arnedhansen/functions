@@ -37,9 +37,9 @@ colors = color_def(projectName);
 
 % Load headmodel
 if ispc == 1
-    headmodel = load('W:\Students\Arne\MA\headmodel\ant128lay.mat');
+    headmodel = load('W:\Students\Arne\toolboxes\headmodel\layANThead.mat');
 else
-    headmodel = load('/Volumes/methlab/Students/Arne/MA/headmodel/ant128lay.mat');
+    headmodel = load('/Volumes/methlab/Students/Arne/toolboxes/headmodel/layANThead.mat');
 end
 
 % Set the base path according to the provided project name
