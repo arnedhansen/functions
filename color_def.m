@@ -6,28 +6,38 @@ if strcmp(projectName, 'AOC')
     colors = [0.68, 0.85, 0.90;  % Pastel blue
         0.60, 0.80, 0.60;  % Pastel green
         1.00, 0.70, 0.75]; % Pastel red
+
     % DataViz pastel colors
     % colors = [1.000, 0.549, 0.000;  % Pastel orange
     %           0.627, 0.204, 0.941;  % Pastel magenta
     %           0.082, 0.565, 0.565]; % Pastel green
 elseif strcmp(projectName, 'GCP')
-    colors = [
-        0.937, 0.804, 0.867; % Pale rose
-        0.902 0.855 0.788; % Beige
-        0.957 0.714 0.514; % Pastel peach
-        0.557 0.416 0.553; % Purple
-        ];
+    %
+colors = [
+    1 0.9 0.5;   % Darker Pastel Yellow
+    0.9 0.6 0.4;   % Darker Pastel Orange
+    0.9 0.4 0.4;   % Darker Pastel Red
+    0.0 0.0 0.0;   % Black
+];
+
+
+    % Pastel colors
+    % colors = [
+    %     0.937, 0.804, 0.867; % Pale rose
+    %     0.902 0.855 0.788;   % Beige
+    %     0.957 0.714 0.514;   % Pastel peach
+    %     0.557 0.416 0.553;   % Purple
+    %     ];
 end
 end
 
-% %% UZH colors?
-%
+%% UZH colors
 %
 % %% Pastel colors
 % colors = [
-%     0.902 0.855 0.788; % Beige
-%     0.557 0.416 0.553; % Purple
-%     0.957 0.714 0.514; % Pastel peach
+%     0.902 0.855 0.788;   % Beige
+%     0.557 0.416 0.553;   % Purple
+%     0.957 0.714 0.514;   % Pastel peach
 %     0.678, 0.847, 0.902; % Soft blue
 %     0.667, 0.882, 0.722; % Mint green
 %     0.996, 0.890, 0.561; % Pastel yellow
@@ -39,20 +49,21 @@ end
 %     0.749, 0.827, 0.933; % Baby blue
 %     0.937, 0.804, 0.867; % Pale rose
 % ];
-%
+
 %% Visualization
+% close all
 % rgbMatrix = colors;
-%
+% 
 % % Create a figure to display colours
 % figure;
-%
+% 
 % % Loop through each row in the RGB matrix
 % for i = 1:size(rgbMatrix, 1)
 %     % Plot each colour as a rectangle
 %     rectangle('Position', [i-1, 0, 1, 1], 'FaceColor', rgbMatrix(i, :), 'EdgeColor', 'none');
 %     hold on;
 % end
-%
+% 
 % % Adjust axis to fit all rectangles
 % axis equal;
 % axis off;
