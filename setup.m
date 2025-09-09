@@ -39,7 +39,7 @@ colors = color_def(projectName);
 if ispc == 1
     headmodel = load('W:\Students\Arne\toolboxes\headmodel\layANThead.mat');
 else
-    headmodel = load('/Volumes/methlab/Students/Arne/toolboxes/headmodel/layANThead.mat');
+    headmodel = load('/Volumes/g_psyplafor_methlab$/Students/Arne/toolboxes/headmodel/layANThead.mat');
 end
 
 % Set the base path according to the provided project name
@@ -47,13 +47,13 @@ if ispc == 1
     baseDir = 'W:\Students\Arne\';
     path = strcat(baseDir, projectName, '\data\features\');
 else
-    baseDir = '/Volumes/methlab/Students/Arne/';
+    baseDir = '/Volumes/g_psyplafor_methlab$/Students/Arne/';
     path = fullfile(baseDir, projectName, 'data/features/');
 end
 
 % Check if the path exists
 if ~isfolder(path)
-    error('The specified project path does not exist: %s', path);
+    error('This project path does not exist: %s', path);
 end
 
 % List directories in the selected path
