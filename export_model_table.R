@@ -13,32 +13,34 @@ export_model_table <- function(model, file_path) {
       str_replace_all("\\(Intercept\\)", "Intercept") %>%
       str_replace_all("([A-Za-z_]+)([\\.:]*)([A-Z][a-z0-9]+$)", "\\1 [\\3]")
   }
-  fmt_p <- function(p) {
-    if (all(is.na(p))) return(rep("", length(p)))
-    stars <- dplyr::case_when(
-      p < 0.001 ~ "***",
-      p < 0.01  ~ "**",
-      p < 0.05  ~ "*",
-      TRUE      ~ ""
-    )
-    base <- ifelse(!is.na(p) & p <= 0.001,
-                   formatC(p, format = "e", digits = 2),
-                   ifelse(!is.na(p), formatC(p, format = "f", digits = 3), ""))
-    paste0(base, stars)
+  p_base <- function(p) {
+    ifelse(!is.na(p) & p <= 0.001,
+           formatC(p, format = "e", digits = 2),
+           ifelse(!is.na(p), formatC(p, format = "f", digits = 3), ""))
   }
+  p_stars <- function(p) dplyr::case_when(
+    is.na(p) ~ "",
+    p < 0.001 ~ "***",
+    p < 0.01  ~ "**",
+    p < 0.05  ~ "*",
+    TRUE      ~ ""
+  )
   
   # ---- fixed effects ----
   fx <- broom.mixed::tidy(model, effects = "fixed", conf.int = TRUE)
   has_stat <- "statistic" %in% names(fx)
   has_se   <- "std.error" %in% names(fx)
+  
   fixed_tbl <- fx %>%
     transmute(
       Variable = prettify_terms(term),
-      `β`      = round(estimate, 2),
-      `SE`     = if (has_se) round(std.error, 2) else NA_real_,
-      `CI`     = paste0(round(conf.low, 2), " – ", round(conf.high, 2)),
-      `t-value`= if (has_stat) round(statistic, 2) else NA_real_,
-      `p-value`= fmt_p(p.value)
+      `β`       = round(estimate, 3),
+      `SE`      = if (has_se) round(std.error, 3) else NA_real_,
+      `CI`      = paste0(round(conf.low, 3), " – ", round(conf.high, 3)),
+      `t-value` = if (has_stat) round(statistic, 3) else NA_real_,
+      p_num     = p_base(p.value),
+      p_star    = p_stars(p.value),
+      `p-value` = ""   # filled via flextable::compose
     )
   
   # ---- variance components (SDs) ----
@@ -67,38 +69,33 @@ export_model_table <- function(model, file_path) {
                                       paste0("Log likelihood  ", round(ll, 1)),
                                       ""))
   
-  # ---- divider row with correct column types ----
-  divider_row <- tibble::tibble(
-    Variable = "Variance components",
-    `β` = NA_real_,
-    `SE` = NA_real_,
-    `CI` = NA_character_,
-    `t-value` = NA_real_,
-    `p-value` = NA_character_
-  )
-  combined <- dplyr::bind_rows(fixed_tbl, divider_row)
-  
   # ---- flextables ----
-  ft_top <- flextable(combined) %>% autofit()
-  ft_top <- bold(ft_top, part = "header", bold = TRUE)
+  ft_top <- flextable::flextable(fixed_tbl) %>% flextable::autofit()
+  ft_top <- flextable::bold(ft_top, part = "header", bold = TRUE)
   
-  # merge the divider across columns (older flextable: no j=)
-  div_idx <- nrow(combined)
-  ft_top <- merge_h(ft_top, i = div_idx, part = "body")
-  ft_top <- bold(ft_top, i = div_idx, bold = TRUE, part = "body")
-  ft_top <- align(ft_top, i = div_idx, align = "left", part = "body")
-  ft_top <- bg(ft_top, i = div_idx, j = seq_len(ncol(combined)), bg = "#F2F2F2", part = "body")
+  # p-value with bold stars
+  ft_top <- flextable::compose(
+    ft_top, j = "p-value",
+    value = flextable::as_paragraph(
+      flextable::as_chunk(fixed_tbl$p_num),
+      flextable::as_chunk(fixed_tbl$p_star, props = officer::fp_text(bold = TRUE))
+    )
+  )
+  ft_top <- flextable::delete_columns(ft_top, c("p_num","p_star"))
   
-  ft_var <- flextable(var_tbl) %>% autofit()
-  ft_var <- bold(ft_var, part = "header", bold = TRUE)
+  ft_var <- flextable::flextable(var_tbl) %>% flextable::autofit()
+  ft_var <- flextable::bold(ft_var, part = "header", bold = TRUE)
   
   # ---- export ----
   title_txt <- paste0(deparse(formula(model)))
-  doc <- read_docx() %>%
-    body_add_par(title_txt, style = "heading 2") %>%
-    body_add_flextable(ft_top) %>%
-    body_add_par("") %>%
-    body_add_flextable(ft_var)
+  doc <- officer::read_docx() %>%
+    officer::body_add_fpar(officer::fpar(officer::ftext(title_txt, officer::fp_text(bold = TRUE, font.size = 15)))) %>%
+    officer::body_add_par("") %>%
+    flextable::body_add_flextable(value = ft_top) %>%
+    officer::body_add_par("") %>%
+    officer::body_add_fpar(officer::fpar(officer::ftext("Variance components", officer::fp_text(bold = TRUE, font.size = 12)))) %>%
+    officer::body_add_par("") %>%
+    flextable::body_add_flextable(value = ft_var)
   
   print(doc, target = file_path)
 }
