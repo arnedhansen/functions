@@ -30,7 +30,17 @@ function [subjects, path, colors, headmodel] = setup(projectName)
 clearvars -except projectName;
 
 % Add EEG Lab functions
+clc
+disp(upper('adding eeglab functions...'))
 addEEGLab
+
+% Initialize FieldTrip
+clc
+disp(upper('initializing FieldTrip...'))
+addpath('/Volumes/g_psyplafor_methlab$/Students/Arne/toolboxes/fieldtrip-20250928');
+% which ft_defaults
+% which ft_warning
+ft_defaults
 
 % Load colors
 colors = color_def(projectName);
