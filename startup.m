@@ -7,7 +7,9 @@ disp(upper('starting up matlab...'))
 
 %% Initialize Python
 %  Force MATLAB's Python bridge to use the system Python 3.9
+if ~ispc
 pyenv('Version','/Library/Developer/CommandLineTools/usr/bin/python3');
+end
 
 %% Connect to server METHLAB
 disp(upper('connecting to servers...'))
