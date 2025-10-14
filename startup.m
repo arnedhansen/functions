@@ -51,5 +51,6 @@ if ~ispc
     clc
     disp(upper('matlab is ready...'))
 else
-    disp(upper('NO STARTUP ON WINDOWS PC ON METHLAB SERVER...'))
+    disp(upper('STARTUP FOR WINDOWS PC ON METHLAB SERVER...'))
+    C:\Users\dummy\Documents\MATLAB\startup.m
 end
