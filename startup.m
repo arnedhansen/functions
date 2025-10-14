@@ -50,7 +50,8 @@ if ~ispc
     %%
     clc
     disp(upper('matlab is ready...'))
-else
+elseif ispc
     disp(upper('STARTUP FOR WINDOWS PC ON METHLAB SERVER...'))
-    C:\Users\dummy\Documents\MATLAB\startup.m
+    cd('C:\Users\dummy\Documents\MATLAB\')
+    startup.m
 end
