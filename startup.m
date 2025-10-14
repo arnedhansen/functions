@@ -53,5 +53,5 @@ if ~ispc
 elseif ispc
     disp(upper('STARTUP FOR WINDOWS PC ON METHLAB SERVER...'))
     cd('C:\Users\dummy\Documents\MATLAB\')
-    startup.m
+    startup
 end
