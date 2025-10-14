@@ -13,7 +13,8 @@ end
 
 % Monitor selection
 mp = get(0,'MonitorPositions');  % [x y w h] per monitor
-monitorIndex = min(2, size(mp,1));  % prefer second if available
+%monitorIndex = min(2, size(mp,1));  % prefer second if available
+monitorIndex = 1;
 mon = mp(monitorIndex,:);
 
 % Dialog geometry
@@ -24,12 +25,21 @@ py = mon(2) + (mon(4)-H)/2;
 
 % Build modal figure (classic, fast)
 bg = 0.97*[1 1 1];
-f = figure('Name','Run mode', 'NumberTitle','off', ...
+
+% Build figure invisible, normal first
+f = figure('Name','Run mode','NumberTitle','off', ...
     'MenuBar','none','ToolBar','none','Resize','off', ...
-    'Color',bg, 'WindowStyle','modal', 'Visible','off', ...
-    'Position',[px py W H], 'Units','pixels', ...
+    'Color',bg, 'Visible','off', 'Units','pixels',...
     'DefaultUicontrolFontSize',fontSize, ...
     'DefaultUicontrolFontName','Helvetica');
+
+% Position BEFORE making it modal
+set(f,'Position',[px py W H]);  % uses your computed [px py W H]
+drawnow;                        % let HG apply the position
+
+% Now make it modal and ensure it's on-screen
+set(f,'WindowStyle','modal');
+movegui(f,'onscreen');          % guard against OS nudges
 
 % Layout numbers (pixels)
 pad   = round(0.08*W);
@@ -76,8 +86,10 @@ else
 end
 
 if strcmp(mode, 'all')
+    clc
     disp(upper('processing all subjects...'));
 else
+    clc
     disp(upper('processing only new subjects...'));
 end
 
