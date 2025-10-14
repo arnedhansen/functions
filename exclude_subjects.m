@@ -5,7 +5,7 @@ if strcmp(project, 'AOC')
     if ispc == 1
         fileID = fopen('W:\Students\Arne\AOC\data\controls\AOC_exclusion_participants.rtf', 'r');
     else
-        fileID = fopen('/Volumes/methlab/Students/Arne/AOC/data/controls/AOC_exclusion_participants.rtf', 'r');
+        fileID = fopen('/Volumes/g_psyplafor_methlab$/Students/Arne/AOC/data/controls/AOC_exclusion_participants.rtf', 'r');
     end
 
     % Read the content as a raw string
