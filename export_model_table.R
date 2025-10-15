@@ -97,5 +97,84 @@ export_model_table <- function(model, file_path) {
     officer::body_add_par("") %>%
     flextable::body_add_flextable(value = ft_var)
   
+  # ---- emmeans (back-transformed means + pairwise contrasts) ----
+  if ("Condition" %in% all.vars(formula(model))) {
+    if (requireNamespace("emmeans", quietly = TRUE)) {
+      emm <- tryCatch(
+        emmeans::emmeans(model, ~ Condition, type = "response"),
+        error = function(e) NULL
+      )
+      if (!is.null(emm)) {
+        # Estimated marginal means
+        emm_tbl <- as.data.frame(emm)
+        emm_tbl <- emm_tbl %>%
+          mutate(
+            Estimate = round(response, 3),
+            SE = round(SE, 3),
+            LowerCI = round(as.numeric(asymp.LCL), 3),
+            UpperCI = round(as.numeric(asymp.UCL), 3)
+          ) %>%
+          select(Condition, Estimate, SE, LowerCI, UpperCI)
+        
+        ft_emm <- flextable::flextable(emm_tbl) %>%
+          flextable::autofit() %>%
+          flextable::bold(part = "header", bold = TRUE)
+        
+        # Pairwise contrasts
+        contr <- tryCatch(
+          emmeans::pairs(emm, adjust = "tukey", type = "response"),
+          error = function(e) NULL
+        )
+        if (!is.null(contr)) {
+          contr_tbl <- as.data.frame(contr)
+          # Back-transform estimates if present
+          if ("ratio" %in% names(contr_tbl)) {
+            contr_tbl$Estimate <- contr_tbl$ratio
+          } else if ("odds.ratio" %in% names(contr_tbl)) {
+            contr_tbl$Estimate <- contr_tbl$odds.ratio
+          } else {
+            contr_tbl$Estimate <- contr_tbl$estimate
+          }
+          
+          contr_tbl <- contr_tbl %>%
+            mutate(
+              Contrast = contrast,
+              Estimate = round(Estimate, 3),
+              SE = round(SE, 3),
+              LowerCI = round(as.numeric(asymp.LCL), 3),
+              UpperCI = round(as.numeric(asymp.UCL), 3),
+              p = round(p.value, 4)
+            ) %>%
+            select(Contrast, Estimate, SE, LowerCI, UpperCI, p)
+          
+          ft_contr <- flextable::flextable(contr_tbl) %>%
+            flextable::autofit() %>%
+            flextable::bold(part = "header", bold = TRUE)
+        }
+        
+        # Add both to document
+        doc <- doc %>%
+          officer::body_add_par("") %>%
+          officer::body_add_fpar(officer::fpar(
+            officer::ftext("Estimated marginal means (back-transformed)",
+                           officer::fp_text(bold = TRUE, font.size = 12))
+          )) %>%
+          officer::body_add_par("") %>%
+          flextable::body_add_flextable(value = ft_emm)
+        
+        if (exists("ft_contr")) {
+          doc <- doc %>%
+            officer::body_add_par("") %>%
+            officer::body_add_fpar(officer::fpar(
+              officer::ftext("Pairwise contrasts (Tukey-adjusted)",
+                             officer::fp_text(bold = TRUE, font.size = 12))
+            )) %>%
+            officer::body_add_par("") %>%
+            flextable::body_add_flextable(value = ft_contr)
+        }
+      }
+    }
+  }
+  
   print(doc, target = file_path)
 }
