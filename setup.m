@@ -1,13 +1,7 @@
-%% setup - Set up data processing environment for EEG projects
+%% setup - MATLAB Data Processing Environment for Arne's Projects
 %
 % Syntax:
 %   [subjects, path, colors, headmodel] = setup(projectName)
-%
-% Description:
-%   This function sets up the environment for EEG data processing based on
-%   the specified project name. It adds EEGLAB functions to the path, loads 
-%   colour definitions, the appropriate head model, and identifies the 
-%   subject folders in the project directory.
 %
 % Input:
 %   projectName - (char) Name of the project folder containing subject data.
@@ -18,12 +12,9 @@
 %   colors     - (struct) Colour definitions specific to the project.
 %   headmodel  - (struct) Loaded head model for EEG data processing.
 %
-% Notes:
-%   - Requires the `color_def` and `addEEGLab` functions to be available 
-%     in the MATLAB path.
-%
-% Example:
-%   [subjects, path, colors, ant128lay] = setup('AOC');
+% Required Functions:
+%   - color_def
+%   - addEEGLab
 
 function [subjects, path, colors, headmodel] = setup(projectName)
 % Clear environment
