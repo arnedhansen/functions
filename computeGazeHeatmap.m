@@ -43,8 +43,8 @@ binned_data_pixels = histcounts2(x_positions, y_positions, x_grid_pixels, y_grid
 binned_time = binned_data_pixels / 500; % Divide by sampling rate (500Hz) -> Convert to dwell time per bin (seconds)
 
 % Normalise by window duration (seconds) so values are per-second rates
-window_legnth = size(data, 2) / 500;                % after blink removal
-binned_rate = binned_time / window_legnth;          % seconds per bin per second (= proportion of time per bin)
+window_length = size(data, 2) / 500;                % after blink removal
+binned_rate = binned_time / window_length;          % seconds per bin per second (= proportion of time per bin)
 
 % Apply gaussian smoothing
 smoothed_data_pixels = imgaussfilt(binned_rate, smoothing_factor);
