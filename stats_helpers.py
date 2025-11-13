@@ -13,6 +13,7 @@ def p_to_signif(p):
         return "*"
     else:
         return "n.s."
+
 def _mask_series(s: pd.Series) -> pd.Series:
     """1.5×IQR mask within one group; outliers -> NaN."""
     if s.size == 0:
@@ -97,7 +98,7 @@ def _contrast_test(c_vec, fe, cov):
     p = 2 * (1 - norm.cdf(abs(z)))  # two-sided p-value from standard normal
     return est, se, z, p
 
-def mixedlm_pairwise_contrasts(df, value_col="value", group_col="Condition", id_col="ID", p_adjust="bonferroni"):
+def mixedlm_pairwise_contrasts(df, value_col="value", group_col="Condition", id_col="ID", p_adjust="fdr_bh"):
     res, dfc = _mixedlm_fit(df, value_col, group_col, id_col)
     levels, means, L, cov = _predicted_means_and_cov(res, dfc, group_col)
     fe = res.params
@@ -105,7 +106,7 @@ def mixedlm_pairwise_contrasts(df, value_col="value", group_col="Condition", id_
     # build pairwise list in canonical order
     pairs = []
     for i in range(len(levels)):
-        for j in range(i+1, len(levels)):
+        for j in range(i + 1, len(levels)):
             g1, g2 = levels[i], levels[j]
             # contrast mean(g2) - mean(g1) = (L[g2] - L[g1])' * beta
             c_vec = L[g2] - L[g1]
@@ -113,9 +114,20 @@ def mixedlm_pairwise_contrasts(df, value_col="value", group_col="Condition", id_
             pairs.append((g1, g2, est, se, z, p))
 
     out = pd.DataFrame(pairs, columns=["group1", "group2", "estimate", "se", "z", "p"])
+
     if p_adjust is not None and len(out) > 0:
-        padj = multipletests(out["p"].to_numpy(), method=("bonferroni" if p_adjust == "bonferroni" else "fdr_bh"))[1]
+        # map p_adjust to a statsmodels method string
+        pa = p_adjust.lower()
+        if pa in ("fdr", "fdr_bh", "bh"):
+            method = "fdr_bh"
+        elif pa in ("bonf", "bonferroni"):
+            method = "bonferroni"
+        else:
+            raise ValueError(f"Unknown p_adjust method: {p_adjust}")
+
+        padj = multipletests(out["p"].to_numpy(), method=method)[1]
         out["p_adj"] = padj
     else:
         out["p_adj"] = out["p"]
+
     return out
