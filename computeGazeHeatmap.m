@@ -39,12 +39,12 @@ x_grid_pixels = linspace(0, 800, num_bins);
 y_grid_pixels = linspace(0, 600, num_bins);
 
 % Bin data
-binned_data_pixels = histcounts2(x_positions, y_positions, x_grid_pixels, y_grid_pixels);
-binned_time = binned_data_pixels / 500; % Divide by sampling rate (500Hz) -> Convert to dwell time per bin (seconds)
+binned_data_pixels = histcounts2(x_positions, y_positions, x_grid_pixels, y_grid_pixels); % unit: coutns/samples
+binned_time = binned_data_pixels / 500; % Divide by sampling rate (500Hz) -> unit: seconds per bin
 
-% Normalise by window duration (seconds) so values are per-second rates
-window_length = size(data, 2) / 500;                % after blink removal
-binned_rate = binned_time / window_length;          % seconds per bin per second (= proportion of time per bin)
+% Normalise by window duration
+window_length = size(data, 2) / 500;
+binned_rate = binned_time / window_length; % unit: proportion of time spent in that spatial bin
 
 % Apply gaussian smoothing
 smoothed_data_pixels = imgaussfilt(binned_rate, smoothing_factor);
