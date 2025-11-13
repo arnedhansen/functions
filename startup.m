@@ -47,6 +47,10 @@ if ~ispc
     cd('/Users/Arne/Documents/GitHub/')
     clear
 
+    %% Get screen size
+    set(0,'units','pixels')  
+    get(0, 'ScreenSize')
+
     %%
     clc
     disp(upper('matlab is ready...'))
