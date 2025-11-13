@@ -20,35 +20,6 @@ def drop1_lrt(full_res, reduced_res):
     return {"LL_full": ll_full, "LL_reduced": ll_red, "df_full": df_full, "df_reduced": df_red,
             "df_diff": df_diff, "LR": LR, "p": p}
 
-def wald_table_for_terms(res, term_names):
-    """
-    Joint Wald tests for multi-df terms in a MixedLM.
-    term_names: list of lists, each inner list contains parameter name substrings
-                to group (e.g., all dummies for C(Condition) or all interaction terms).
-    Returns DataFrame with chi^2 and p for each set.
-    """
-    rows = []
-    beta = res.params
-    V    = res.cov_params()
-    for label, name_list in term_names:
-        idx = [i for i, n in enumerate(beta.index) if any(s in n for s in name_list)]
-        if len(idx) == 0:
-            rows.append([label, np.nan, np.nan, np.nan])
-            continue
-        b = beta.values[idx]
-        Vsub = V.values[np.ix_(idx, idx)]
-        # H0: all selected coefficients == 0
-        # Wald chi2 = b' V^-1 b
-        try:
-            Vinv = np.linalg.inv(Vsub)
-            chi2_val = float(b.T @ Vinv @ b)
-            df = len(idx)
-            p = 1.0 - chi2.cdf(chi2_val, df)
-        except np.linalg.LinAlgError:
-            chi2_val, df, p = np.nan, len(idx), np.nan
-        rows.append([label, df, chi2_val, p])
-    return pd.DataFrame(rows, columns=["Term", "df", "Wald_Chi2", "p"])
-
 def pairwise_condition_contrasts_at_mean_gaze(res, condition_levels, design_prefix="C(Condition)"):
     """
     For a MixedLM with formula: AlphaPower ~ Gaze_c * C(Condition) + (1|ID),
@@ -90,3 +61,88 @@ def pairwise_condition_contrasts_at_mean_gaze(res, condition_levels, design_pref
     else:
         out["p_adj"] = out["p"]
     return out
+
+def mixedlm_fixed_effects_to_df(res, task=None, variable=None, model_label=None):
+    """
+    Extract fixed-effect summaries from a statsmodels result (MixedLM or OLS)
+    into a tidy DataFrame: term, beta, SE, z/t, p, CI.
+    Optionally annotate with Task / Variable / ModelLabel columns.
+    """
+    params = res.params
+
+    # Standard errors: try bse, then bse_fe (MixedLM)
+    se = getattr(res, "bse", None)
+    if se is None and hasattr(res, "bse_fe"):
+        se = res.bse_fe
+    if se is None:
+        # Fallback: no SE available
+        se = pd.Series(index=params.index, dtype=float)
+
+    # t/z statistics
+    stat = getattr(res, "tvalues", None)
+    if stat is None:
+        stat = getattr(res, "zvalues", None)
+    if stat is None:
+        # compute from params / SE if possible
+        stat = params / se
+
+    # p-values
+    pvals = getattr(res, "pvalues", None)
+    if pvals is None:
+        from scipy.stats import norm
+        pvals = 2.0 * (1.0 - norm.cdf(np.abs(stat)))
+
+    # confidence intervals
+    try:
+        ci = res.conf_int()
+        if isinstance(ci, pd.DataFrame):
+            ci.columns = ["ci_low", "ci_high"]
+        else:
+            ci = pd.DataFrame(ci, index=params.index, columns=["ci_low", "ci_high"])
+    except Exception:
+        ci = None
+
+    df = pd.DataFrame({
+        "Term": params.index,
+        "beta": params.values,
+        "SE":   se.reindex(params.index).values,
+        "stat": stat.reindex(params.index).values,
+        "p":    pvals.reindex(params.index).values
+    })
+
+    if ci is not None:
+        ci = ci.reindex(params.index)
+        df["CI_low"]  = ci["ci_low"].values
+        df["CI_high"] = ci["ci_high"].values
+    else:
+        df["CI_low"]  = np.nan
+        df["CI_high"] = np.nan
+
+    # Optional annotations
+    if task is not None:
+        df.insert(0, "Task", task)
+    if variable is not None:
+        df.insert(1, "DV", variable)
+    if model_label is not None:
+        df.insert(2, "ModelLabel", model_label)
+
+    return df
+
+
+def lr_effect_sizes(LR, df_diff, n_obs):
+    """
+    Likelihood-ratio based effect sizes for nested model comparisons.
+
+    R2_LR = 1 - exp(-LR / n)
+    f2_LR = R2_LR / (1 - R2_LR)
+
+    Returns (R2_LR, f2_LR). Uses NaN if inputs are not finite or n<=0.
+    """
+    import numpy as np
+
+    if (not np.isfinite(LR)) or (LR <= 0) or (not np.isfinite(n_obs)) or (n_obs <= 0):
+        return np.nan, np.nan
+
+    R2_LR = 1.0 - np.exp(-LR / n_obs)
+    f2_LR = R2_LR / (1.0 - R2_LR) if R2_LR < 1.0 else np.nan
+    return R2_LR, f2_LR
