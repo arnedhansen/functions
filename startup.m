@@ -1,11 +1,11 @@
 %% Startup MATLAB Arne
-restoredefaultpath
 clear
 clc
 close all
-disp(upper('starting up matlab...'))
-
 if ~ispc
+    restoredefaultpath
+    disp(upper('starting up matlab...'))
+
     %% Initialize Python
     %  Force MATLAB's Python bridge to use the system Python 3.9
     pyenv('Version','/Library/Developer/CommandLineTools/usr/bin/python3');
@@ -48,7 +48,7 @@ if ~ispc
     clear
 
     %% Get screen size
-    set(0,'units','pixels')  
+    set(0,'units','pixels')
     get(0, 'ScreenSize')
 
     %%
@@ -56,6 +56,6 @@ if ~ispc
     disp(upper('matlab is ready...'))
 elseif ispc
     disp(upper('STARTUP FOR WINDOWS PC ON METHLAB SERVER...'))
-    cd('C:\Users\dummy\Documents\MATLAB\')
+    cd('C:\Users\Administrator\Documents\MATLAB\')
     startup
 end
