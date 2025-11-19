@@ -7,17 +7,16 @@ function [velocityTrlAvg, velocityTimeSeries] = computeEyeVelocity(dataET, windo
 % Input:
 %   dataET      - FieldTrip-like eye-tracking struct with fields:
 %                   .trial{trl} : [nChan x nSamples], channels 1 (X) and 2 (Y)
-%                   .time{trl}  : [1 x nSamples] time stamps
+%                   .time{trl}  : [1 x nSamples] time stamps (in seconds)
 %                   .fsample    : scalar, sampling rate in Hz
 %   window_size - length of moving-average window in samples (for smoothing).
 %
 % Output:
-%   velocityTrlAvg     - [3 x nTime] matrix containing trial-averaged
-%                        smoothed velocity:
-%                           row 1 = |vx|  (horizontal)
-%                           row 2 = |vy|  (vertical)
-%                           row 3 = speed (2D Euclidean)
-%                        Time axis corresponds to velocityTimeSeries.time{1}(1:nTime).
+%   velocityTrlAvg     - [nTrials x 3] matrix with trial-wise average velocity
+%                        over the interval 0.3–2.0 s:
+%                           col 1 = mean |vx|   (horizontal)
+%                           col 2 = mean |vy|   (vertical)
+%                           col 3 = mean speed  (2D Euclidean)
 %
 %   velocityTimeSeries - struct with the same format as dataET, but:
 %                           trial{trl}(1,:) = smoothed |X-velocity|
@@ -30,12 +29,22 @@ function [velocityTrlAvg, velocityTimeSeries] = computeEyeVelocity(dataET, windo
 %     then absolute value (or speed) is smoothed again.
 %   - Because of diff(), the velocity time series is one sample shorter
 %     than the original position time series.
+%   - Trial averages are computed only across samples with 0.3 <= t <= 2.0 s.
 
     % Copy input struct so we keep meta-info (cfg, label, etc.)
     velocityData = dataET;
 
     sampling_rate = dataET.fsample;
     nTrials       = numel(dataET.trial);
+
+    % Preallocate per-trial averages
+    vx_mean    = nan(nTrials, 1);
+    vy_mean    = nan(nTrials, 1);
+    speed_mean = nan(nTrials, 1);
+
+    % Time window for averaging (in seconds)
+    t_min = 0.3;
+    t_max = 2.0;
 
     % Loop over trials and compute velocity for X, Y, and 2D speed
     for trl = 1:nTrials
@@ -77,39 +86,28 @@ function [velocityTrlAvg, velocityTimeSeries] = computeEyeVelocity(dataET, windo
         velocityData.trial{trl}(2,:) = vy_smoothed;
         velocityData.trial{trl}(3,:) = speed_smoothed;
 
-        % If you want to preserve the original channel 3 (e.g. pupil) as a 4th row:
-        % if size(dataET.trial{trl}, 1) >= 3
-        %     velocityData.trial{trl}(4,:) = dataET.trial{trl}(3,1:nVelSamples);
-        % end
-
         velocityData.time{trl} = t_vel;
+
+        % -----------------------------------------------------------------
+        % Trial-wise averages in the window [0.3, 2.0] seconds
+        % -----------------------------------------------------------------
+        idx_window = t_vel >= t_min & t_vel <= t_max;
+
+        if any(idx_window)
+            vx_mean(trl)    = mean(vx_smoothed(idx_window));
+            vy_mean(trl)    = mean(vy_smoothed(idx_window));
+            speed_mean(trl) = mean(speed_smoothed(idx_window));
+        else
+            % If trial is too short or time axis does not cover 0.3–2.0 s,
+            % leave as NaN.
+            vx_mean(trl)    = NaN;
+            vy_mean(trl)    = NaN;
+            speed_mean(trl) = NaN;
+        end
     end
 
-    % ---------------------------------------------------------------------
-    % Trial-averaged velocity time course (across trials)
-    % ---------------------------------------------------------------------
-
-    % Trials can differ in length; for averaging across trials,
-    % align to the shortest velocity time series.
-    trlLengths = cellfun(@(x) size(x,2), velocityData.trial);
-    minLen     = min(trlLengths);
-
-    velX   = zeros(nTrials, minLen);
-    velY   = zeros(nTrials, minLen);
-    speed2 = zeros(nTrials, minLen);
-
-    for trl = 1:nTrials
-        velX(trl,:)   = velocityData.trial{trl}(1,1:minLen);
-        velY(trl,:)   = velocityData.trial{trl}(2,1:minLen);
-        speed2(trl,:) = velocityData.trial{trl}(3,1:minLen);
-    end
-
-    % Mean across trials → [3 x minLen]
-    velocityTrlAvg = [
-        mean(velX,   1);
-        mean(velY,   1);
-        mean(speed2, 1)
-    ];
+    % Collect per-trial averages into [nTrials x 3] matrix
+    velocityTrlAvg = [vx_mean, vy_mean, speed_mean];
 
     % Return full trial-wise struct
     velocityTimeSeries = velocityData;
