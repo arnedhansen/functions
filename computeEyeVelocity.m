@@ -1,5 +1,5 @@
 function [velocityTrlAvg, velocityTimeSeries] = computeEyeVelocity(dataET, window_size)
-% COMPUTEEYEVELOCITY  Compute smoothed eye velocity from gaze position.
+% COMPUTEEYEVELOCITY  Compute smoothed eye velocity and 2D speed from gaze position.
 %
 % Syntax:
 %   [velocityTrlAvg, velocityTimeSeries] = computeEyeVelocity(dataET, window_size)
@@ -13,10 +13,10 @@ function [velocityTrlAvg, velocityTimeSeries] = computeEyeVelocity(dataET, windo
 %
 % Output:
 %   velocityTrlAvg     - [3 x nTime] matrix containing trial-averaged
-%                        smoothed absolute velocity:
-%                           row 1 = horizontal |vx|
-%                           row 2 = vertical   |vy|
-%                           row 3 = 2D speed   sqrt(vx^2 + vy^2)
+%                        smoothed velocity:
+%                           row 1 = |vx|  (horizontal)
+%                           row 2 = |vy|  (vertical)
+%                           row 3 = speed (2D Euclidean)
 %                        Time axis corresponds to velocityTimeSeries.time{1}(1:nTime).
 %
 %   velocityTimeSeries - struct with the same format as dataET, but:
@@ -27,13 +27,13 @@ function [velocityTrlAvg, velocityTimeSeries] = computeEyeVelocity(dataET, windo
 %
 % Notes:
 %   - Velocity is computed as the derivative of smoothed position (movmean),
-%     then the absolute value of velocity (and 2D speed) is smoothed again.
+%     then absolute value (or speed) is smoothed again.
 %   - Because of diff(), the velocity time series is one sample shorter
 %     than the original position time series.
-%   - Input units are preserved (e.g. px → px/s, deg → deg/s).
 
-    % Copy input struct
-    velocityData  = dataET;
+    % Copy input struct so we keep meta-info (cfg, label, etc.)
+    velocityData = dataET;
+
     sampling_rate = dataET.fsample;
     nTrials       = numel(dataET.trial);
 
@@ -61,22 +61,23 @@ function [velocityTrlAvg, velocityTimeSeries] = computeEyeVelocity(dataET, windo
         vy_smoothed = movmean(abs(vy), window_size);
 
         % --- 2D Euclidean speed (combining horizontal and vertical) ---
-        % Compute speed from raw velocity components, then smooth
         speed = sqrt(vx.^2 + vy.^2);
         speed_smoothed = movmean(speed, window_size);
 
-        % Match time vector to velocity (one sample shorter than original)
+        % Match time vector to velocity length (one sample shorter than original)
         t = dataET.time{trl};
-        nVelSamples = numel(vx_smoothed);  % also matches vy_smoothed and speed_smoothed
+        nVelSamples = numel(speed_smoothed);  % also matches vx_smoothed, vy_smoothed
         t_vel = t(1:nVelSamples);
 
-        % Write into output struct
+        % Allocate new trial matrix with correct number of samples
+        velocityData.trial{trl} = zeros(3, nVelSamples);
+
+        % Fill velocity channels
         velocityData.trial{trl}(1,:) = vx_smoothed;
         velocityData.trial{trl}(2,:) = vy_smoothed;
         velocityData.trial{trl}(3,:) = speed_smoothed;
 
-        % If you need to preserve the original 3rd channel (e.g. pupil),
-        % you could move it to a 4th row as:
+        % If you want to preserve the original channel 3 (e.g. pupil) as a 4th row:
         % if size(dataET.trial{trl}, 1) >= 3
         %     velocityData.trial{trl}(4,:) = dataET.trial{trl}(3,1:nVelSamples);
         % end
