@@ -107,7 +107,7 @@ function [velocityTrlAvg, velocityTimeSeries] = computeEyeVelocity(dataET, windo
     end
 
     % Collect per-trial averages into [nTrials x 3] matrix
-    velocityTrlAvg = [vx_mean, vy_mean, speed_mean];
+    velocityTrlAvg = [vx_mean, vy_mean, speed_mean]';
 
     % Return full trial-wise struct
     velocityTimeSeries = velocityData;
