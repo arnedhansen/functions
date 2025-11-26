@@ -7,8 +7,13 @@ if ~ispc
     disp(upper('starting up matlab...'))
 
     %% Initialize Python
-    %  Force MATLAB's Python bridge to use the system Python 3.9
-    pyenv('Version','/Library/Developer/CommandLineTools/usr/bin/python3');
+    %  Force MATLAB's Python bridge to use the conda python env
+    try
+        pyenv('Version', '/opt/anaconda3/envs/matlab_fooof/bin/python', ...
+              'ExecutionMode', 'OutOfProcess');
+    catch ME
+        warning('Could not set pyenv: %s', ME.message);
+    end
 
     %% Connect to server METHLAB
     disp(upper('connecting to servers...'))
@@ -49,10 +54,10 @@ if ~ispc
 
     %% Get screen size
     set(0,'units','pixels')
-    get(0, 'ScreenSize')
+    %get(0, 'ScreenSize')
 
     %%
-    clc
+    %clc
     disp(upper('matlab is ready...'))
 elseif ispc
     disp(upper('STARTUP FOR WINDOWS PC ON METHLAB SERVER...'))
