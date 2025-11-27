@@ -7,7 +7,7 @@ if ~ispc
     disp(upper('starting up matlab...'))
 
     %% Initialize Python
-    %  Force MATLAB's Python bridge to use the conda python env
+    % Force MATLAB's Python bridge to use the conda python env
     try
         pyenv('Version', '/opt/anaconda3/envs/matlab_fooof/bin/python', ...
               'ExecutionMode', 'OutOfProcess');
@@ -36,7 +36,8 @@ if ~ispc
         disp(['Failed to connect to server methlab_data: ', cmdout]);
     end
 
-    %% Add paths for EEGLAB, toolboxes and functions
+    %% Add paths for toolboxes and functions
+    disp(upper('addin paths to toolboxes and functions...'));
     % Toolboxes
     addpath('/Volumes/g_psyplafor_methlab$/Students/Arne/toolboxes/');
     % Explicitly add shadedErrorBar
