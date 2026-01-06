@@ -37,7 +37,7 @@ if ~ispc
     end
 
     %% Add paths for toolboxes and functions
-    disp(upper('addin paths to toolboxes and functions...'));
+    disp(upper('adding paths to toolboxes and functions...'));
     % Toolboxes
     addpath('/Volumes/g_psyplafor_methlab$/Students/Arne/toolboxes/');
     % Explicitly add shadedErrorBar
