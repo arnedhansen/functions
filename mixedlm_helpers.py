@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from scipy.stats import chi2, norm
 import statsmodels.formula.api as smf
+from statsmodels.stats.multitest import multipletests
 
 def fit_mixedlm(formula, data, group, reml=False, method="lbfgs", maxiter=500):
     m = smf.mixedlm(formula, data=data, groups=data[group], re_formula="1")
@@ -25,7 +26,7 @@ def pairwise_condition_contrasts_at_mean_gaze(res, condition_levels, design_pref
     For a MixedLM with formula: AlphaPower ~ Gaze_c * C(Condition) + (1|ID),
     if Gaze_c is mean-centred, then contrasts across Condition at Gaze_c=0
     depend only on the Condition main-effect dummies.
-    We compute estimates, SE, z, p, and Bonferroni-adjusted p.
+    We compute estimates, SE, z, p, and Benjamini–Hochberg FDR–adjusted p.
     """
     beta = res.params
     V    = res.cov_params()
@@ -54,10 +55,10 @@ def pairwise_condition_contrasts_at_mean_gaze(res, condition_levels, design_pref
             p   = 2.0 * (1.0 - norm.cdf(abs(z))) if np.isfinite(z) else np.nan
             results.append((g1, g2, est, se, z, p))
     out = pd.DataFrame(results, columns=["Group1","Group2","Estimate","SE","z","p"])
-    # Bonferroni
+    # Benjamini–Hochberg FDR
     if len(out) > 0:
-        m = out.shape[0]
-        out["p_adj"] = np.minimum(out["p"] * m, 1.0)
+        _, p_adj, _, _ = multipletests(out["p"].values, method="fdr_bh")
+        out["p_adj"] = p_adj
     else:
         out["p_adj"] = out["p"]
     return out
