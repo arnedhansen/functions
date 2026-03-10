@@ -62,7 +62,11 @@ if strcmp(projectNameNorm, 'CVA')
         disp(upper('skipping eeglab and fieldtrip initialization...'))
     end
 
-    cvaRoot = fullfile('/Users', 'Arne', 'Documents', 'GitHub', 'CVA');
+    if ispc == 1
+            cvaRoot = fullfile('C:\Users\Administrator\Documents\GitHub\CVA');
+    else
+            cvaRoot = fullfile('/Users', 'Arne', 'Documents', 'GitHub', 'CVA');
+    end
     if ~isfolder(cvaRoot)
         error('CVA repository not found at: %s', cvaRoot);
     end
