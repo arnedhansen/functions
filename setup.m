@@ -1,11 +1,13 @@
 %% setup - MATLAB Data Processing Environment for Arne's Projects
 %
 % Syntax:
+%   setup()
 %   [subjects, path, colors, headmodel] = setup(projectName)
 %   [subjects, path, colors, headmodel] = setup(projectName, initToolboxes)
 %
 % Input:
-%   projectName    - (char) Name of the project folder containing subject data.
+%   projectName    - (char, optional) Name of the project folder containing
+%                    subject data.
 %   initToolboxes  - (logical / numeric) Flag indicating whether to initialise
 %                    EEGLAB and FieldTrip. Default = 1.
 %
@@ -19,6 +21,39 @@
 %   - color_def
 %   - addEEGLab
 function [subjects, path, colors, headmodel] = setup(projectName, initToolboxes)
+
+% No-argument mode:
+% Used after startup to restore project paths (e.g., CVA scripts call setup;).
+if nargin == 0
+    subjects = {};
+    path = '';
+    colors = struct();
+    headmodel = [];
+
+    startDir = pwd;
+    projectRoot = startDir;
+
+    while ~exist(fullfile(projectRoot, 'CVA_paths.m'), 'file')
+        parentDir = fileparts(projectRoot);
+        if strcmp(parentDir, projectRoot)
+            break;
+        end
+        projectRoot = parentDir;
+    end
+
+    if ~exist(fullfile(projectRoot, 'CVA_paths.m'), 'file')
+        cvaPathsLocation = which('CVA_paths');
+        if ~isempty(cvaPathsLocation)
+            projectRoot = fileparts(cvaPathsLocation);
+        else
+            error(['setup() without arguments failed: could not locate CVA root. ', ...
+                   'Expected CVA_paths.m in current tree or on path.']);
+        end
+    end
+
+    addpath(genpath(projectRoot));
+    return;
+end
 
 % Handle optional input
 if nargin < 2 || isempty(initToolboxes)
