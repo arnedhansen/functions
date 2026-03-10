@@ -18,7 +18,6 @@
 % Required Functions:
 %   - color_def
 %   - addEEGLab
-
 function [subjects, path, colors, headmodel] = setup(projectName, initToolboxes)
 
 % Handle optional input
@@ -34,7 +33,6 @@ if initToolboxes
     clc
     disp(upper('adding eeglab functions...'))
     addEEGLab
-
     clc
     disp(upper('initializing FieldTrip...'))
     if ispc == 1
@@ -51,35 +49,80 @@ end
 % Load colors
 colors = color_def(projectName);
 
-% Load headmodel
-if ispc == 1
-    headmodel = load('W:\Students\Arne\toolboxes\headmodel\layANThead.mat');
+% --- CVA: no ANT headmodel needed (MRI-based, handled via CAT12/SPM) ---
+if strcmpi(projectName, 'CVA')
+    headmodel = [];
+
+    % SPM12 path (platform-specific)
+    if ispc == 1
+        spmRoot = 'W:\Students\Arne\toolboxes\spm12';
+    else
+        spmRoot = '/Volumes/g_psyplafor_methlab$/Students/Arne/toolboxes/spm12';
+    end
+    if ~isfolder(spmRoot)
+        error('SPM12 folder not found: %s', spmRoot);
+    end
+    addpath(spmRoot);
+
+    % Initialize SPM and verify CAT12 availability
+    if ~exist('spm', 'file')
+        error('SPM12 is not available on MATLAB path after addpath.');
+    end
+    spm('defaults', 'fmri');
+    spm_jobman('initcfg');
+    if ~exist('cat12', 'file')
+        error('CAT12 not found. Install in spm12/toolbox/cat12 and restart MATLAB.');
+    end
 else
-    headmodel = load('/Volumes/g_psyplafor_methlab$/Students/Arne/toolboxes/headmodel/layANThead.mat');
+    if ispc == 1
+        headmodel = load('W:\Students\Arne\toolboxes\headmodel\layANThead.mat');
+    else
+        headmodel = load('/Volumes/g_psyplafor_methlab$/Students/Arne/toolboxes/headmodel/layANThead.mat');
+    end
 end
 
-% Set the base path according to the provided project name
+% Set base path and get subjects
 if ispc == 1
     baseDir = 'W:\Students\Arne\';
-    path = strcat(baseDir, projectName, '\data\features\');
 else
     baseDir = '/Volumes/g_psyplafor_methlab$/Students/Arne/';
-    path = fullfile(baseDir, projectName, 'data/features/');
 end
 
-% Check if the path exists
-if ~isfolder(path)
-    error('This project path does not exist: %s', path);
+% --- CVA: different folder structure and subject ID format ---
+if strcmpi(projectName, 'CVA')
+
+    path = fullfile(baseDir, projectName, 'data', 'features');
+
+    % Subjects are identified from EEG data folder (sub-XXXXXX format)
+    eegDir = fullfile(baseDir, projectName, 'data', 'EEG');
+    if ~isfolder(eegDir)
+        error('CVA EEG data folder does not exist: %s', eegDir);
+    end
+    dirs     = dir(fullfile(eegDir, 'sub-*'));
+    folders  = dirs([dirs.isdir]);
+    subjects = {folders.name};
+
+    fprintf('Loaded %d CVA subjects (LEMON format).\n', numel(subjects));
+    disp(subjects(:));
+
+else
+    % --- All other projects: original behaviour unchanged ---
+    path = strcat(baseDir, projectName, '\data\features\');
+    if ~ispc
+        path = fullfile(baseDir, projectName, 'data/features/');
+    end
+
+    if ~isfolder(path)
+        error('This project path does not exist: %s', path);
+    end
+
+    dirs    = dir(path);
+    folders = dirs([dirs.isdir] & ~ismember({dirs.name}, {'.', '..'}));
+    subjects = {folders.name};
+
+    filteredSubjects = str2double(string(subjects));
+    disp('Loaded subjects:');
+    disp(filteredSubjects(:));
+
 end
-
-% List directories in the selected path
-dirs = dir(path);
-folders = dirs([dirs.isdir] & ~ismember({dirs.name}, {'.', '..'}));
-subjects = {folders.name};
-
-% Display the loaded subjects
-filteredSubjects = str2double(string(subjects));
-disp('Loaded subjects:');
-disp(filteredSubjects(:));
-
 end

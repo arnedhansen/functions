@@ -27,7 +27,17 @@ colors = [
     %     0.902 0.855 0.788;   % Beige
     %     0.957 0.714 0.514;   % Pastel peach
     %     0.557 0.416 0.553;   % Purple
-    %     ];
+%     ];
+elseif strcmpi(projectName, 'CVA')
+    colors = [
+        0.122 0.467 0.706;   % Blue
+        0.839 0.153 0.157;   % Red
+        0.173 0.627 0.173;   % Green
+        0.580 0.404 0.741;   % Purple
+        1.000 0.498 0.055;   % Orange
+    ];
+else
+    error('Unknown projectName ''%s'' in color_def.m', projectName);
 end
 end
 
