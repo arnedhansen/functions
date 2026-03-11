@@ -11,6 +11,11 @@ if strcmp(projectName, 'AOC')
     % colors = [1.000, 0.549, 0.000;  % Pastel orange
     %           0.627, 0.204, 0.941;  % Pastel magenta
     %           0.082, 0.565, 0.565]; % Pastel green
+elseif strcmp(projectName, 'AOI')
+    % Reuse AOC palette for AOI for visual continuity.
+    colors = [0.68, 0.85, 0.90;
+        0.60, 0.80, 0.60;
+        1.00, 0.70, 0.75];
 elseif strcmp(projectName, 'GCP')
     %
 colors = [

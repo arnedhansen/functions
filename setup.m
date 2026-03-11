@@ -86,6 +86,53 @@ if strcmp(projectNameNorm, 'CVA')
     return;
 end
 
+%%%%%%%%%%%% AOI-specific setup branch
+if strcmp(projectNameNorm, 'AOI')
+    colors = color_def('AOI');
+    headmodel = [];
+
+    if initToolboxes
+        clc
+        disp(upper('adding eeglab functions...'))
+        addEEGLab
+        clc
+        disp(upper('initializing FieldTrip...'))
+        if ispc == 1
+            addpath('W:\Students\Arne\toolboxes\fieldtrip-20250928');
+        else
+            addpath('/Volumes/g_psyplafor_methlab$/Students/Arne/toolboxes/fieldtrip-20250928');
+        end
+        ft_defaults
+    else
+        clc
+        disp(upper('skipping eeglab and fieldtrip initialization...'))
+    end
+
+    if ispc == 1
+        aoiRoot = fullfile('C:\Users\Administrator\Documents\GitHub\AOI');
+    else
+        aoiRoot = fullfile('/Users', 'Arne', 'Documents', 'GitHub', 'AOI');
+    end
+    if ~isfolder(aoiRoot)
+        error('AOI repository not found at: %s', aoiRoot);
+    end
+    addpath(genpath(aoiRoot));
+
+    path = resolve_aoi_paths(aoiRoot);
+
+    if ispc == 1
+        headmodelPath = 'W:\Students\Arne\toolboxes\headmodel\layANThead.mat';
+    else
+        headmodelPath = '/Volumes/g_psyplafor_methlab$/Students/Arne/toolboxes/headmodel/layANThead.mat';
+    end
+    if exist(headmodelPath, 'file') == 2
+        headmodel = load(headmodelPath);
+    end
+
+    subjects = discover_aoi_subjects(path);
+    return;
+end
+
 % Clear environment (keep inputs)
 clearvars -except projectName initToolboxes;
 
@@ -266,4 +313,62 @@ end
 
 tmp = tmp(~cellfun(@isempty, tmp));
 out = unique(tmp, 'stable');
+end
+
+function paths = resolve_aoi_paths(aoiRoot)
+if ispc
+    baseStudents = 'W:\Students\Arne';
+else
+    baseStudents = '/Volumes/g_psyplafor_methlab$/Students/Arne';
+end
+
+paths = struct();
+paths.repo = aoiRoot;
+paths.functions = fullfile(fileparts(aoiRoot), 'functions');
+paths.aoi_root = fullfile(baseStudents, 'AOI');
+paths.aoi_data = fullfile(paths.aoi_root, 'data');
+paths.aoi_features = fullfile(paths.aoi_data, 'features');
+paths.aoi_tables = fullfile(paths.aoi_data, 'tables');
+paths.aoi_stats = fullfile(paths.aoi_data, 'stats');
+paths.aoi_multiverse = fullfile(paths.aoi_data, 'multiverse');
+paths.aoi_figures = fullfile(paths.aoi_root, 'figures');
+
+paths.aoc_root = fullfile(baseStudents, 'AOC');
+paths.aoc_data = fullfile(paths.aoc_root, 'data');
+paths.aoc_features = fullfile(paths.aoc_data, 'features');
+paths.aoc_merged = fullfile(paths.aoc_data, 'merged');
+paths.aoc_multiverse = fullfile(paths.aoc_data, 'multiverse');
+paths.vp_table = '/Volumes/g_psyplafor_methlab$/VP/OCC/AOC/AOC_VPs.xlsx';
+
+fields = fieldnames(paths);
+for i = 1:numel(fields)
+    p = paths.(fields{i});
+    if ischar(p) && ~contains(p, '.xlsx') && ~contains(p, '.csv') && ~isfolder(p)
+        try
+            mkdir(p);
+        catch
+        end
+    end
+end
+end
+
+function subjects = discover_aoi_subjects(paths)
+subjectDir = '';
+if isfield(paths, 'aoi_features') && isfolder(paths.aoi_features)
+    subjectDir = paths.aoi_features;
+end
+if isempty(subjectDir) || ~isfolder(subjectDir)
+    if isfield(paths, 'aoc_features') && isfolder(paths.aoc_features)
+        subjectDir = paths.aoc_features;
+    end
+end
+
+if isempty(subjectDir) || ~isfolder(subjectDir)
+    subjects = {};
+    return;
+end
+
+dirs = dir(subjectDir);
+folders = dirs([dirs.isdir] & ~ismember({dirs.name}, {'.', '..'}));
+subjects = {folders.name};
 end
