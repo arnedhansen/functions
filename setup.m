@@ -171,12 +171,12 @@ paths = struct();
 paths.data_root = dataRoot;
 % LEMON preprocessed .set files are input; CVA preprocessing writes to EEG/EEG-preprocessed
 paths.eeg_raw  = fullfile(dataRoot, 'LEMON', 'EEG', 'EEG-preprocessed');
-paths.mri_raw  = fullfile(dataRoot, 'MRI', 'MRI-raw');
+paths.mri_raw  = fullfile(dataRoot, 'LEMON', 'MRI', 'MRI-raw');
 paths.demo     = fullfile(dataRoot, 'LEMON', 'demographics', 'Participants_MPILMBB_LEMON.csv');
-paths.eeg_proc = fullfile(dataRoot, 'EEG', 'EEG-preprocessed');
-paths.mri_proc = fullfile(dataRoot, 'MRI', 'MRI-preprocessed');
-paths.eeg_fex  = fullfile(dataRoot, 'EEG', 'EEG-features');
-paths.mri_fex  = fullfile(dataRoot, 'MRI', 'MRI-features');
+paths.eeg_proc = fullfile(dataRoot, 'LEMON', 'EEG', 'EEG-preprocessed');
+paths.mri_proc = fullfile(dataRoot, 'LEMON', 'MRI', 'MRI-preprocessed');
+paths.eeg_fex  = fullfile(dataRoot, 'LEMON', 'EEG', 'EEG-features');
+paths.mri_fex  = fullfile(dataRoot, 'LEMON', 'MRI', 'MRI-features');
 paths.demo_fex = fullfile(dataRoot, 'LEMON', 'demographics');
 paths.master   = dataRoot;
 paths.fex      = paths.master; % legacy alias for scripts expecting paths.fex
