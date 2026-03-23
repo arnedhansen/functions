@@ -20,6 +20,8 @@
 % Required Functions:
 %   - color_def
 %   - addEEGLab
+%   - init_toolboxes
+%   - get_cva_data_root
 function [subjects, path, colors, headmodel] = setup(projectName, initToolboxes)
 
 % No-argument mode: return placeholders without side effects.
@@ -39,29 +41,14 @@ end
 projectNameChar = char(string(projectName));
 projectNameNorm = upper(strtrim(projectNameChar));
 
-%%%%%%%%%%%% CVA-specific setup branch
+%% CVA
 if strcmp(projectNameNorm, 'CVA')
     colors = color_def('CVA');
     headmodel = [];
 
-    if initToolboxes
-        clc
-        disp(upper('adding eeglab functions...'))
-        addEEGLab
-        clc
-        disp(upper('initializing FieldTrip...'))
-        if ispc == 1
-            addpath('W:\Students\Arne\toolboxes\fieldtrip-20250928');
-        else
-            addpath('/Volumes/g_psyplafor_methlab$/Students/Arne/toolboxes/fieldtrip-20250928');
-        end
-        ft_defaults
-    else
-        clc
-        disp(upper('skipping eeglab and fieldtrip initialization...'))
-    end
+    init_toolboxes(initToolboxes);
 
-    if ispc == 1
+    if ispc
         cvaRoot = fullfile('C:\Users\Administrator\Documents\GitHub\CVA');
     else
         cvaRoot = fullfile('/Users', 'Arne', 'Documents', 'GitHub', 'CVA');
@@ -73,10 +60,10 @@ if strcmp(projectNameNorm, 'CVA')
 
     path = resolve_cva_paths(cvaRoot);
 
-    if ispc == 1
-        headmodelPath = 'W:\Students\Arne\toolboxes\headmodel\layANThead.mat';
+    if ispc
+        headmodelPath = fullfile('W:\Students\Arne', 'toolboxes', 'headmodel', 'layANThead.mat');
     else
-        headmodelPath = '/Volumes/g_psyplafor_methlab$/Students/Arne/toolboxes/headmodel/layANThead.mat';
+        headmodelPath = fullfile('/Volumes/g_psyplafor_methlab$/Students/Arne', 'toolboxes', 'headmodel', 'layANThead.mat');
     end
     if exist(headmodelPath, 'file') == 2
         headmodel = load(headmodelPath);
@@ -86,29 +73,14 @@ if strcmp(projectNameNorm, 'CVA')
     return;
 end
 
-%%%%%%%%%%%% AOI-specific setup branch
+%% AOI
 if strcmp(projectNameNorm, 'AOI')
     colors = color_def('AOI');
     headmodel = [];
 
-    if initToolboxes
-        clc
-        disp(upper('adding eeglab functions...'))
-        addEEGLab
-        clc
-        disp(upper('initializing FieldTrip...'))
-        if ispc == 1
-            addpath('W:\Students\Arne\toolboxes\fieldtrip-20250928');
-        else
-            addpath('/Volumes/g_psyplafor_methlab$/Students/Arne/toolboxes/fieldtrip-20250928');
-        end
-        ft_defaults
-    else
-        clc
-        disp(upper('skipping eeglab and fieldtrip initialization...'))
-    end
+    init_toolboxes(initToolboxes);
 
-    if ispc == 1
+    if ispc
         aoiRoot = fullfile('C:\Users\Administrator\Documents\GitHub\AOI');
     else
         aoiRoot = fullfile('/Users', 'Arne', 'Documents', 'GitHub', 'AOI');
@@ -120,10 +92,10 @@ if strcmp(projectNameNorm, 'AOI')
 
     path = resolve_aoi_paths(aoiRoot);
 
-    if ispc == 1
-        headmodelPath = 'W:\Students\Arne\toolboxes\headmodel\layANThead.mat';
+    if ispc
+        headmodelPath = fullfile('W:\Students\Arne', 'toolboxes', 'headmodel', 'layANThead.mat');
     else
-        headmodelPath = '/Volumes/g_psyplafor_methlab$/Students/Arne/toolboxes/headmodel/layANThead.mat';
+        headmodelPath = fullfile('/Volumes/g_psyplafor_methlab$/Students/Arne', 'toolboxes', 'headmodel', 'layANThead.mat');
     end
     if exist(headmodelPath, 'file') == 2
         headmodel = load(headmodelPath);
@@ -133,35 +105,23 @@ if strcmp(projectNameNorm, 'AOI')
     return;
 end
 
+%% Generic
 % Clear environment (keep inputs)
 clearvars -except projectName initToolboxes;
 
-% Add EEG Lab functions and initialise FieldTrip only if requested
-if initToolboxes
-    clc
-    disp(upper('adding eeglab functions...'))
-    addEEGLab
-    clc
-    disp(upper('initializing FieldTrip...'))
-    if ispc == 1
-        addpath('W:\Students\Arne\toolboxes\fieldtrip-20250928');
-    else
-        addpath('/Volumes/g_psyplafor_methlab$/Students/Arne/toolboxes/fieldtrip-20250928');
-    end
-    ft_defaults
-else
-    clc
-    disp(upper('skipping eeglab and fieldtrip initialization...'))
-end
+init_toolboxes(initToolboxes);
 
-% Load colors
 colors = color_def(projectName);
 
-% Load headmodel
-if ispc == 1
-    headmodel = load('W:\Students\Arne\toolboxes\headmodel\layANThead.mat');
+if ispc
+    headmodelPath = fullfile('W:\Students\Arne', 'toolboxes', 'headmodel', 'layANThead.mat');
 else
-    headmodel = load('/Volumes/g_psyplafor_methlab$/Students/Arne/toolboxes/headmodel/layANThead.mat');
+    headmodelPath = fullfile('/Volumes/g_psyplafor_methlab$/Students/Arne', 'toolboxes', 'headmodel', 'layANThead.mat');
+end
+if exist(headmodelPath, 'file') == 2
+    headmodel = load(headmodelPath);
+else
+    headmodel = [];
 end
 
 % Set base path and get subjects
@@ -189,6 +149,7 @@ disp('Loaded subjects:');
 disp(filteredSubjects(:));
 end
 
+%% CVA
 function subjects = discover_cva_subjects(eegRawDir)
 if ~isfolder(eegRawDir)
     error('CVA EEG directory not found: %s', eegRawDir);
@@ -203,42 +164,20 @@ subjects = apply_cva_subject_overrides(subjects);
 fprintf('Loaded CVA subjects: %d\n', numel(subjects));
 end
 
-function paths = resolve_cva_paths(cvaRoot)
-if exist('resolve_data_root', 'file') == 2
-    dataRoot = resolve_data_root();
-else
-    if ispc
-        candidates = { ...
-            'W:\Students\Arne\CVA\data', ...
-            fullfile(cvaRoot, 'data') ...
-        };
-    else
-        candidates = { ...
-            '/Volumes/g_psyplafor_methlab$/Students/Arne/CVA/data', ...
-            fullfile(cvaRoot, 'data') ...
-        };
-    end
-    dataRoot = '';
-    for i = 1:numel(candidates)
-        if exist(candidates{i}, 'dir')
-            dataRoot = candidates{i};
-            break;
-        end
-    end
-    if isempty(dataRoot)
-        error('CVA data root not found. Set CVA_DATA_ROOT or create CVA/data.');
-    end
-end
+function paths = resolve_cva_paths(cvaRoot) %#ok<INUSD>
+dataRoot = get_cva_data_root();
 
 paths = struct();
-paths.eeg_raw  = fullfile(dataRoot, 'EEG', 'EEG-raw');
+paths.data_root = dataRoot;
+% LEMON preprocessed .set files are input; CVA preprocessing writes to EEG/EEG-preprocessed
+paths.eeg_raw  = fullfile(dataRoot, 'LEMON', 'EEG', 'EEG-preprocessed');
 paths.mri_raw  = fullfile(dataRoot, 'MRI', 'MRI-raw');
-paths.demo     = fullfile(dataRoot, 'demographics', 'Participants_MPILMBB_LEMON.csv');
+paths.demo     = fullfile(dataRoot, 'LEMON', 'demographics', 'Participants_MPILMBB_LEMON.csv');
 paths.eeg_proc = fullfile(dataRoot, 'EEG', 'EEG-preprocessed');
 paths.mri_proc = fullfile(dataRoot, 'MRI', 'MRI-preprocessed');
 paths.eeg_fex  = fullfile(dataRoot, 'EEG', 'EEG-features');
 paths.mri_fex  = fullfile(dataRoot, 'MRI', 'MRI-features');
-paths.demo_fex = fullfile(dataRoot, 'demographics');
+paths.demo_fex = fullfile(dataRoot, 'LEMON', 'demographics');
 paths.master   = dataRoot;
 paths.fex      = paths.master; % legacy alias for scripts expecting paths.fex
 paths.stats    = fullfile(dataRoot, 'stats');
@@ -315,6 +254,7 @@ tmp = tmp(~cellfun(@isempty, tmp));
 out = unique(tmp, 'stable');
 end
 
+%% AOI
 function paths = resolve_aoi_paths(aoiRoot)
 if ispc
     baseStudents = 'W:\Students\Arne';
