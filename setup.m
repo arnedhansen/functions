@@ -69,7 +69,7 @@ if strcmp(projectNameNorm, 'CVA')
         headmodel = load(headmodelPath);
     end
 
-    subjects = discover_cva_subjects(path.eeg_raw);
+    subjects = discover_cva_subjects(path.eeg_downloaded);
     return;
 end
 
@@ -150,12 +150,12 @@ disp(filteredSubjects(:));
 end
 
 %% CVA
-function subjects = discover_cva_subjects(eegRawDir)
-if ~isfolder(eegRawDir)
-    error('CVA EEG directory not found: %s', eegRawDir);
+function subjects = discover_cva_subjects(eegDownloadedDir)
+if ~isfolder(eegDownloadedDir)
+    error('CVA EEG directory not found: %s', eegDownloadedDir);
 end
 
-listing  = dir(fullfile(eegRawDir, 'sub-*'));
+listing  = dir(fullfile(eegDownloadedDir, 'sub-*'));
 subjects = {listing([listing.isdir]).name};
 subjects = sort(subjects);
 
@@ -169,8 +169,8 @@ dataRoot = get_cva_data_root();
 
 paths = struct();
 paths.data_root = dataRoot;
-% LEMON preprocessed .set files are input; CVA preprocessing writes to EEG/EEG-preprocessed
-paths.eeg_raw  = fullfile(dataRoot, 'LEMON', 'EEG', 'EEG-preprocessed');
+% LEMON preprocessed .set files (downloaded) are input; CVA preprocessing writes to EEG-preprocessed
+paths.eeg_downloaded = fullfile(dataRoot, 'LEMON', 'EEG', 'EEG-downloaded');
 paths.mri_raw  = fullfile(dataRoot, 'LEMON', 'MRI', 'MRI-raw');
 paths.demo     = fullfile(dataRoot, 'LEMON', 'demographics', 'Participants_MPILMBB_LEMON.csv');
 paths.eeg_proc = fullfile(dataRoot, 'LEMON', 'EEG', 'EEG-preprocessed');
