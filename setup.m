@@ -2,8 +2,8 @@
 %
 % Syntax:
 %   setup()
-%   [subjects, path, colors, headmodel] = setup(projectName)
-%   [subjects, path, colors, headmodel] = setup(projectName, initToolboxes)
+%   [subjects, paths, colors, headmodel] = setup(projectName)
+%   [subjects, paths, colors, headmodel] = setup(projectName, initToolboxes)
 %
 % Input:
 %   projectName    - (char, optional) Name of the project folder containing
@@ -13,7 +13,7 @@
 %
 % Output:
 %   subjects   - (cell array) Names of subject folders in the data directory.
-%   path       - (char) Path to the project's features directory.
+%   paths      - (struct) Common project paths (incl. paths.features).
 %   colors     - (struct) Colour definitions specific to the project.
 %   headmodel  - (struct) Loaded head model for EEG data processing.
 %
@@ -22,12 +22,12 @@
 %   - addEEGLab
 %   - init_toolboxes
 %   - get_cva_data_root
-function [subjects, path, colors, headmodel] = setup(projectName, initToolboxes)
+function [subjects, paths, colors, headmodel] = setup(projectName, initToolboxes)
 
 % No-argument mode: return placeholders without side effects.
 if nargin == 0
     subjects = {};
-    path = '';
+    paths = struct();
     colors = struct();
     headmodel = [];
     return;
@@ -58,7 +58,7 @@ if strcmp(projectNameNorm, 'CVA')
     end
     addpath(genpath(cvaRoot));
 
-    path = resolve_cva_paths(cvaRoot);
+    paths = resolve_cva_paths(cvaRoot);
 
     if ispc
         headmodelPath = fullfile('W:\Students\Arne', 'toolboxes', 'headmodel', 'layANThead.mat');
@@ -69,7 +69,7 @@ if strcmp(projectNameNorm, 'CVA')
         headmodel = load(headmodelPath);
     end
 
-    subjects = discover_cva_subjects(path.eeg_downloaded);
+    subjects = discover_cva_subjects(paths.eeg_downloaded);
     return;
 end
 
@@ -90,7 +90,7 @@ if strcmp(projectNameNorm, 'AOI')
     end
     addpath(genpath(aoiRoot));
 
-    path = resolve_aoi_paths(aoiRoot);
+    paths = resolve_aoi_paths(aoiRoot);
 
     if ispc
         headmodelPath = fullfile('W:\Students\Arne', 'toolboxes', 'headmodel', 'layANThead.mat');
@@ -101,7 +101,7 @@ if strcmp(projectNameNorm, 'AOI')
         headmodel = load(headmodelPath);
     end
 
-    subjects = discover_aoi_subjects(path);
+    subjects = discover_aoi_subjects(paths);
     return;
 end
 
@@ -131,22 +131,54 @@ else
     baseDir = '/Volumes/g_psyplafor_methlab$/Students/Arne/';
 end
 
-path = strcat(baseDir, projectName, '\data\features\');
-if ~ispc
-    path = fullfile(baseDir, projectName, 'data/features/');
+paths = resolve_project_paths(baseDir, projectNameNorm);
+
+if ~isfolder(paths.features)
+    error('This project path does not exist: %s', paths.features);
 end
 
-if ~isfolder(path)
-    error('This project path does not exist: %s', path);
-end
-
-dirs    = dir(path);
-folders = dirs([dirs.isdir] & ~ismember({dirs.name}, {'.', '..'}));
-subjects = {folders.name};
+subjects = discover_subjects_in_features(paths.features);
 
 filteredSubjects = str2double(string(subjects));
 disp('Loaded subjects:');
 disp(filteredSubjects(:));
+end
+
+%% Generic helper
+function paths = resolve_project_paths(baseStudents, projectNameNorm)
+%resolve_project_paths Return a struct of commonly used project directories.
+%
+% For most MATLAB pipelines in this repo, the canonical subject folders live
+% under: <baseStudents>/<PROJECT>/data/features/<subject>/...
+%
+% The returned `paths.features` always points to the features root.
+
+proj = char(string(projectNameNorm));
+if isempty(proj)
+    error('Project name must be provided.');
+end
+
+paths = struct();
+paths.base_students = baseStudents;
+paths.project = proj;
+paths.root = fullfile(baseStudents, proj);
+paths.data = fullfile(paths.root, 'data');
+paths.features = fullfile(paths.data, 'features');
+paths.figures = fullfile(paths.root, 'figures');
+paths.stats = fullfile(paths.data, 'stats');
+paths.controls = fullfile(paths.data, 'controls');
+paths.logs = fullfile(paths.controls, 'logs');
+
+% Project-specific extras (keep optional)
+if strcmpi(proj, 'AOC')
+    paths.vp_table = '/Volumes/g_psyplafor_methlab$/VP/OCC/AOC/AOC_VPs.xlsx';
+end
+end
+
+function subjects = discover_subjects_in_features(featuresDir)
+dirs    = dir(featuresDir);
+folders = dirs([dirs.isdir] & ~ismember({dirs.name}, {'.', '..'}));
+subjects = {folders.name};
 end
 
 %% CVA
