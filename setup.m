@@ -106,9 +106,6 @@ if strcmp(projectNameNorm, 'AOI')
 end
 
 %% Generic
-% Clear environment (keep inputs)
-clearvars -except projectName initToolboxes;
-
 init_toolboxes(initToolboxes);
 
 colors = color_def(projectName);
