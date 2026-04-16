@@ -169,6 +169,21 @@ paths.logs = fullfile(paths.controls, 'logs');
 % Project-specific extras (keep optional)
 if strcmpi(proj, 'AOC')
     paths.vp_table = '/Volumes/g_psyplafor_methlab$/VP/OCC/AOC/AOC_VPs.xlsx';
+elseif strcmpi(proj, 'GCP')
+    if ispc
+        shareRoot = 'W:\';
+    else
+        shareRoot = '/Volumes/g_psyplafor_methlab$/';
+    end
+
+    paths.raw_occ = fullfile(shareRoot, 'OCC', 'GCP', 'data');
+    paths.automagic = fullfile(paths.data, 'automagic');
+    paths.merged = fullfile(paths.data, 'merged');
+    paths.eeglab = fullfile(shareRoot, '4marius_bdf', 'eeglab');
+    paths.utility_scripts = fullfile(shareRoot, 'Utility', 'scriptsForEEG');
+    paths.ma_root = fullfile(baseStudents, 'MA');
+    paths.ma_headmodel = fullfile(paths.ma_root, 'headmodel');
+    paths.vp_table = fullfile(shareRoot, 'VP', 'OCC', 'GCP', 'GCP_VPs.xlsx');
 end
 end
 
