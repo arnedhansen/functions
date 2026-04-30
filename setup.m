@@ -185,6 +185,12 @@ elseif strcmpi(proj, 'GCP')
     paths.ma_headmodel = fullfile(paths.ma_root, 'headmodel');
     paths.vp_table = fullfile(shareRoot, 'VP', 'OCC', 'GCP', 'GCP_VPs.xlsx');
 end
+
+if ispc
+    paths.seb_path = 'W:\Students\Arne\toolboxes\shadedErrorBar';
+else
+    paths.seb_path = '/Volumes/g_psyplafor_methlab$/Students/Arne/toolboxes/shadedErrorBar';
+end
 end
 
 function subjects = discover_subjects_in_features(featuresDir)

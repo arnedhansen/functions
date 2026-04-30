@@ -56,7 +56,7 @@ def _mixedlm_fit(df, value_col, group_col, id_col):
     df[group_col] = pd.Categorical(df[group_col], ordered=True)
     formula = f"{value_col} ~ C({group_col})"
     model = smf.mixedlm(formula, data=df, groups=df[id_col], re_formula="1")
-    res = model.fit(reml=True, method="lbfgs")
+    res = model.fit(reml=False, method="lbfgs")
     return res, df
 
 def _predicted_means_and_cov(res, df, group_col):

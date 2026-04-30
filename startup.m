@@ -8,12 +8,12 @@ if ~ispc
 
     %% Initialize Python
     % Force MATLAB's Python bridge to use the conda python env
-    try
-        pyenv('Version', '/opt/anaconda3/envs/matlab_fooof/bin/python', ...
-              'ExecutionMode', 'OutOfProcess');
-    catch ME
-        warning('Could not set pyenv: %s', ME.message);
-    end
+    % try
+    %     pyenv('Version', '/opt/anaconda3/envs/matlab_fooof/bin/python', ...
+    %           'ExecutionMode', 'OutOfProcess');
+    % catch ME
+    %     warning('Could not set pyenv: %s', ME.message);
+    % end
 
     %% Connect to server METHLAB
     disp(upper('connecting to servers...'))
@@ -58,8 +58,8 @@ if ~ispc
     %get(0, 'ScreenSize')
 
     %%
-    %clc
     disp(upper('matlab is ready...'))
+    
 elseif ispc
     disp(upper('STARTUP FOR WINDOWS PC ON METHLAB SERVER...'))
     cd('C:\Users\Administrator\Documents\MATLAB\')

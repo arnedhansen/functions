@@ -26,7 +26,7 @@ def pairwise_condition_contrasts_at_mean_gaze(res, condition_levels, design_pref
     For a MixedLM with formula: AlphaPower ~ Gaze_c * C(Condition) + (1|ID),
     if Gaze_c is mean-centred, then contrasts across Condition at Gaze_c=0
     depend only on the Condition main-effect dummies.
-    We compute estimates, SE, z, p, and Benjamini–Hochberg FDR–adjusted p.
+    We compute estimates, SE, z, p, 95% CI, and Benjamini–Hochberg FDR–adjusted p.
     """
     beta = res.params
     V    = res.cov_params()
@@ -53,8 +53,13 @@ def pairwise_condition_contrasts_at_mean_gaze(res, condition_levels, design_pref
             se  = float(np.sqrt(c @ V.values @ c))
             z   = est / se if se > 0 else np.nan
             p   = 2.0 * (1.0 - norm.cdf(abs(z))) if np.isfinite(z) else np.nan
-            results.append((g1, g2, est, se, z, p))
-    out = pd.DataFrame(results, columns=["Group1","Group2","Estimate","SE","z","p"])
+            ci_low = est - 1.96 * se if np.isfinite(se) else np.nan
+            ci_high = est + 1.96 * se if np.isfinite(se) else np.nan
+            results.append((g1, g2, est, se, z, p, ci_low, ci_high))
+    out = pd.DataFrame(
+        results,
+        columns=["Group1", "Group2", "Estimate", "SE", "z", "p", "CI95_low", "CI95_high"]
+    )
     # Benjamini–Hochberg FDR
     if len(out) > 0:
         _, p_adj, _, _ = multipletests(out["p"].values, method="fdr_bh")
