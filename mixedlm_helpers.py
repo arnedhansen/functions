@@ -124,6 +124,16 @@ def mixedlm_fixed_effects_to_df(res, task=None, variable=None, model_label=None)
         df["CI_low"]  = np.nan
         df["CI_high"] = np.nan
 
+    # statsmodels MixedLM reports random-effect covariance parameters in a
+    # scale-normalized parameterization (e.g., Group Var / scale). Convert
+    # variance/covariance terms back to the DV scale for interpretable tables.
+    scale = getattr(res, "scale", np.nan)
+    re_mask = df["Term"].astype(str).str.contains(r"(Var|Cov)$", regex=True)
+    if np.isfinite(scale) and np.any(re_mask):
+        for col in ("beta", "SE", "CI_low", "CI_high"):
+            if col in df.columns:
+                df.loc[re_mask, col] = df.loc[re_mask, col] * float(scale)
+
     # Optional annotations
     if task is not None:
         df.insert(0, "Task", task)
