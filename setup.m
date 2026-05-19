@@ -168,7 +168,21 @@ paths.logs = fullfile(paths.controls, 'logs');
 
 % Project-specific extras (keep optional)
 if strcmpi(proj, 'AOC')
-    paths.vp_table = '/Volumes/g_psyplafor_methlab$/VP/OCC/AOC/AOC_VPs.xlsx';
+    if ispc
+        paths.vp_table = fullfile('W:\', 'VP', 'OCC', 'AOC', 'AOC_VPs.xlsx');
+        paths.raw_occ = fullfile('V:\', 'OCC', 'AOC', 'data');
+        paths.eeglab_share = fullfile('W:\', '4marius_bdf', 'eeglab');
+    else
+        paths.vp_table = fullfile('/Volumes/g_psyplafor_methlab$/VP/OCC/AOC/AOC_VPs.xlsx');
+        paths.raw_occ = fullfile('/Volumes/g_psyplafor_methlab_data$', 'OCC', 'AOC', 'data');
+        paths.eeglab_share = fullfile('/Volumes/g_psyplafor_methlab$', '4marius_bdf', 'eeglab');
+    end
+    paths.merged = fullfile(paths.data, 'merged');
+    paths.automagic_nohp = fullfile(paths.data, 'automagic_nohp');
+    paths.multiverse = fullfile(paths.data, 'multiverse');
+    paths.preStimFixation = fullfile(paths.controls, 'preStimFixation');
+    paths.fooof = fullfile(paths.controls, 'FOOOF');
+    paths.splits_stats = fullfile(paths.data, 'stats', 'splits');
 elseif strcmpi(proj, 'GCP')
     if ispc
         shareRoot = 'W:\';
